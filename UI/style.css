@@ -1,0 +1,115 @@
+@import "../node_modules/material-design-icons/iconfont/material-icons.css";
+@font-face {
+    font-family: 'Lato-Regular';
+    src: url('../fonts/Lato-Regular.ttf');
+}
+@font-face {
+    font-family: 'Lato-Black';
+    src: url('../fonts/Lato-Black.ttf');
+}
+html, body{
+    margin: 0;
+    font-size: 16px;
+}
+header, footer{
+    display: flex;
+    background: #037F8C;
+}
+.flex-elem{
+    display: flex;
+}
+.alignment-right{
+    text-align: right;
+}
+.logout{
+    flex-grow: 1;
+    align-items: center;
+    justify-content: flex-end;
+    margin-right: 1rem;
+}
+.main-img-size{
+    width: 4rem;
+    height: 4rem;
+}
+
+.main-font{
+    font-family: Lato-Black, serif;
+    color: #FFFFFF;
+    font-size: 1rem;
+}
+.addition-font{
+    font-family: Lato-Regular, serif;
+    color: #FFFFFF;
+    font-size: 0.75rem;
+}
+.flex-sp-between{
+    display: flex;
+    justify-content: space-between;
+    padding: 0 1rem 0 1rem;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    position: fixed;
+
+}
+.flex-sp-between:last-child{
+    display: flex;
+    align-items: flex-end;
+}
+
+.place-center{
+    position: absolute;
+    left: 0;
+    right: 0;
+    text-align: center;
+}
+
+.btn{
+    flex-grow: 1;
+    border: 1px solid #FFFFFF;
+    border-radius: 0 0 0.3rem 0.3rem ;
+    background: #037F8C;
+    outline: none;
+    position: relative;
+
+}
+
+.btn .tooltip {
+    visibility: hidden;
+    margin: auto;
+    width: 5rem;
+    background-color: #03A6A6;
+    color: #fff;
+
+    border-radius: 0.3rem;
+    padding: 0.5rem 0;
+    border: none;
+    position: absolute;
+    z-index: 1;
+    top: 2rem;
+
+}
+.btn:hover{
+    background: #FFFFFF;
+    border: 1px solid #037F8C;
+    transition: 0.6s;
+}
+
+.btn:hover .tooltip{
+    visibility: visible;
+}
+.main-icon{
+    color: #FFFFFF;
+}
+
+.btn:hover .main-icon{
+    color: #037F8C;
+}
+
+
+
+
+
+
+
+
