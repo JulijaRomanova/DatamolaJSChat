@@ -7,50 +7,82 @@
     font-family: 'Lato-Black';
     src: url('../fonts/Lato-Black.ttf');
 }
-html, body{
-    margin: 0;
-    font-size: 16px;
-}
-header, footer{
-    display: flex;
-    background: #037F8C;
-}
-.flex-elem{
-    display: flex;
-}
-.alignment-right{
-    text-align: right;
-}
-.logout{
-    flex-grow: 1;
-    align-items: center;
-    justify-content: flex-end;
-    margin-right: 1rem;
-}
+
 .main-img-size{
     width: 4rem;
     height: 4rem;
 }
 
-.main-font{
-    font-family: Lato-Black, serif;
+.important-font-white{
+    font-family: Lato-Black, sans-serif;
     color: #FFFFFF;
     font-size: 1rem;
+}
+
+.important-font-black{
+    font-family: Lato-Black, sans-serif;
+    color: black;
+    font-size: 1rem;
+}
+.main-font-black{
+    font-family: Lato-Regular, sans-serif;
+    color: black;
+    font-size: 0.9rem;
+}
+.add-font-black{
+    font-family: Lato-Regular, sans-serif;
+    color: black;
+    font-size: 0.8rem;
+}
+
+.post-img-size{
+    font: 12px "Material Icons";
+}
+
+*{
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+}
+
+html{
+    font-size: 14px;
+    height: 100%;
+}
+
+body{
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+header, footer{
+    --dark-green: #037F8C;
+    display: flex;
+    background: var(--dark-green);
+}
+
+.flex-elem{
+    display: flex;
+    align-items: center;
+}
+.alignment-right{
+    text-align: right;
+}
+.logout{
+    display: flex;
+    flex-grow: 1;
+    align-items: center;
+    justify-content: flex-end;
+    margin-right: 1rem;
 }
 .addition-font{
     font-family: Lato-Regular, serif;
     color: #FFFFFF;
     font-size: 0.75rem;
 }
-.flex-sp-between{
-    display: flex;
+.footer-elem{
     justify-content: space-between;
-    padding: 0 1rem 0 1rem;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    position: fixed;
-
+    padding: 1rem;
 }
 .flex-sp-between:last-child{
     display: flex;
@@ -86,7 +118,7 @@ header, footer{
     border: none;
     position: absolute;
     z-index: 1;
-    top: 2rem;
+    top: 2.5rem;
 
 }
 .btn:hover{
@@ -106,6 +138,105 @@ header, footer{
     color: #037F8C;
 }
 
+.message-container{
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow-y: scroll;
+    width: 100%;
+    padding: 1rem 1rem 0 1rem;
+}
+
+.message{
+    display: flex;
+    justify-content: space-between;
+    border: 1px solid black;
+
+    margin-top: 0.5rem;
+    width: calc(50% - 2rem);
+    border-radius: 0.3rem;
+    padding: 0.5rem;
+}
+
+@media screen and (max-width: 600px) {
+    .message{
+        width: 100%;
+    }
+}
+.message:nth-of-type(even){
+    align-self: flex-end;
+}
+.message:nth-of-type(odd){
+    align-self: start;
+}
+
+.message-avatar{
+    display: flex;
+    align-items: center;
+    padding:  0 1rem;
+}
+.short-name{
+    color: white;
+}
+.circle{
+    width: 3rem;
+    height: 3rem;
+
+    text-align: center;
+    border-radius: 50%;
+    background: #FFA834;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.message-all-info{
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+.message-header{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 0 0.5rem 0;
+}
+.message-action{
+    --orange-red-error: #FFA834;
+    display: flex;
+    justify-content: flex-end;
+}   .message-edit:hover{
+        color: var(--orange-red-error);
+    }
+    .message-delete:hover{
+        color: #F25D50
+    }
+.message-date{
+    text-align: right;
+}
+.send-message-container{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 1rem;
+
+}
+.input-message{
+    flex-grow: 1;
+    border-radius: 0.3rem;
+    margin-right: 1rem;
+}
+
+.sender{
+    display: inline-block;
+    vertical-align: bottom;
+    color: #037F8C;
+}
+
+main{
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
 
 
 
