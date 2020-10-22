@@ -1,0 +1,74 @@
+html{
+    font-size: 20px;
+}
+*{
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+}
+
+.position-btn{
+    display: flex;
+    justify-content: center;
+}
+.btn{
+    background: royalblue;
+    color: white;
+    border: none;
+    border-radius: 0.2rem;
+    padding: 0.5rem;
+    margin: 5% 0 0 0;
+    font-family: "Times New Roman", sans-serif;
+
+
+}
+.modal-window{
+    position: fixed;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family:  "Times New Roman", sans-serif;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background: rgba(0,0,0,0.8);
+    z-index: 1;
+}
+.modal-window-content{
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    padding: 0.5rem 0.5rem 1rem 1.5rem;
+    width:70%;
+    background: white;
+    margin: auto;
+}
+
+.modal-close{
+    align-self: flex-end;
+    color: #C0C0C0;
+}
+.modal-title{
+    margin: 1rem 0;
+}
+.modal-info{
+    display: flex;
+    flex-direction: column;
+    padding: 0 1rem 0 0;
+}
+.modal-message{
+    height: 10rem;
+    padding: 1rem 0;
+    font-size: 14px;
+}
+.modal-btn{
+    width: 2rem;
+    align-self: flex-end;
+    background: royalblue;
+    color: white;
+    border: none;
+    border-radius: 0.2rem;
+    padding: 0.4rem;
+    font-family: "Times New Roman", sans-serif;
+}
