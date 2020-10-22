@@ -250,7 +250,18 @@ input:hover, input:active{
 .btn:hover .main-icon{
     color: #037F8C;
 }
+.more-message{
+    display: flex;
+    justify-content: center;
+}
+.btn-more{
+    --main-orange: #FFA834;
+    background: var(--main-orange);
+    padding: 0.5rem 3rem;
+    border: none;
+    border-radius: 0.3rem;
 
+}
 .message-container{
     display: flex;
     flex-direction: column;
@@ -276,10 +287,10 @@ input:hover, input:active{
         width: 100%;
     }
 }
-.message:nth-of-type(even){
+.main-user-message{
     align-self: flex-end;
 }
-.message:nth-of-type(odd){
+.other-message{
     align-self: start;
 }
 
@@ -318,7 +329,16 @@ input:hover, input:active{
     --main-orange: #FFA834;
     display: flex;
     justify-content: flex-end;
-}   .message-edit:hover{
+}
+    .message-edit {
+        --dark-green: #037F8C;
+        color: var(--dark-green);
+    }
+    .message-delete{
+        --dark-green: #037F8C;
+        color: var(--dark-green);
+    }
+    .message-edit:hover{
         color: var(--main-orange);
     }
     .message-delete:hover{
@@ -326,6 +346,11 @@ input:hover, input:active{
     }
 .message-date{
     text-align: right;
+}
+
+.special-message{
+    background-color: #03A6A6;
+    opacity: 0.8;
 }
 
 .confirm-delete{
@@ -365,6 +390,7 @@ main{
     flex: 1;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
 }
 
 
