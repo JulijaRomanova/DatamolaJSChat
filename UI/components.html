@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Chat Alcove components">
+    <meta name="keywords" content="HTML, CSS, JavaScript">
+    <meta name="author" content="Julia Romanova">
+    <meta name="viewport" content="width==device-width,initial-scale=1.0">
+    <title>Alcove Components</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/x-icon" href="../Images/LogoWithBorder.png"/>
+    <link rel="stylesheet" href="../node_modules/material-design-icons/iconfont/material-icons.css">
+</head>
+<body>
+    <div class="users" id="users">
+        <div class="user">
+            <div class="circle">
+                <span class="short-name important-font-white">N1</span>
+            </div>
+            <span class="main-font-black">Name1 Surname1</span>
+            <i class="material-icons create-new-mess">chat_bubble</i>
+        </div>
+        <hr class="line">
+        <div class="user">
+            <div class="circle">
+                <span class="short-name important-font-white">N2</span>
+            </div>
+            <span class="main-font-black place-user-name">Name2 Surname2</span>
+            <i class="material-icons create-new-mess">chat_bubble</i>
+        </div>
+        <hr class="line">
+        <div class="user">
+            <div class="circle">
+                <span class="short-name important-font-white">N3</span>
+            </div>
+            <span class="main-font-black">Name3 Surname3</span>
+            <i class="material-icons create-new-mess no-visible">chat_bubble</i>
+        </div>
+    </div>
+
+    <div class="filters">
+        <div class="filter">
+            <span class="main-font-black filter-title">Username</span>
+            <input type="text" class="main-font-black">
+        </div>
+        <div class="filter">
+            <span class="main-font-black filter-title" >Text of message</span>
+            <input type="text" class="main-font-black">
+        </div>
+        <div class="filter">
+            <span class="main-font-black filter-title">Date</span>
+            <input class="main-font-black" type="date" >
+        </div>
+        <span class="filter-error font-error">There is no data that meets the filter!</span>
+        <div class="confirm-btns">
+
+            <button class="btn btn-negative important-font-white" >
+                Back
+            </button>
+            <button class="btn btn-positive important-font-white">
+                Apply
+            </button>
+
+        </div>
+    </div>
+
+    <div class="confirm-delete">
+        <span class="main-font-black confirm-message">Are you sure that you want to delete this message?</span>
+        <div class="confirm-btns">
+
+            <button class="btn btn-negative important-font-white" >
+                No
+            </button>
+            <button class="btn btn-positive important-font-white">
+                Yes
+            </button>
+
+        </div>
+    </div>
+
+</body>
+</html>

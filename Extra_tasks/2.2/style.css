@@ -1,0 +1,104 @@
+@font-face {
+    font-family: 'Lato-Regular';
+    src: url('../../fonts/Lato-Regular.ttf');
+}
+@font-face {
+    font-family: 'Lato-Black';
+    src: url('../../fonts/Lato-Black.ttf');
+}
+*{
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+}
+html{
+    font-size: 20px;
+    height: 100%;
+
+}
+article{
+    margin: 1rem;
+}
+.general{
+    margin: 0 1rem;
+}
+img{
+    width: 10rem;
+    height: 10rem;
+}
+.main-info{
+    display: flex;
+}
+.place-header{
+    display: flex;
+    flex-wrap: wrap;
+
+}   .place-title{
+        font-family: Lato-Black, sans-serif ;
+        color:#0071c2;
+        margin-right: 0.5rem;
+    }
+    .stars{
+        font-size: 0;
+        margin-right: 0.5rem;
+    }   .star{
+                color: #febb02
+            }
+    .cool{
+        background:   #febb02;
+        color: #FFFFFF;
+        border-radius: 0.1rem;
+        margin-right: 0.5rem;
+    }
+    .genius{
+        background: #0071c2;
+        border-radius: 0.1rem;
+        padding: 0.1rem;
+        font-family: Lato-Black,sans-serif;
+        color: white;
+    }
+.place-link{
+    color: #0071c2;
+    font-family: Lato-Regular, sans-serif;
+    font-size: 0.9rem;
+    text-decoration: underline;
+}
+.point{
+    color: #C0C0C0;
+    font-size: 1rem;
+    text-align: center;
+}
+.recommend{
+    font-family: Lato-Black, sans-serif;
+    margin: 1rem;
+}
+.about-place{
+    display: flex;
+    margin: 1rem;
+}
+.persons{
+    font-size: 0;
+    width: 6rem;
+}
+.items-risks{
+    display: flex;
+    flex-direction: column;
+    font-family: Lato-Regular, sans-serif;
+    font-size: 0.8rem;
+}   .items{
+        color:#0071c2;
+    }
+    .special-for-you{
+            color: #008009;
+    }
+.rating{
+    display: flex;
+
+}   .wonderful{
+        display: flex;
+        flex-direction: column;
+        color: #0071c2;
+        font-family: Lato-Black, sans-serif;
+        font-size: 0.8rem;
+    }
+
