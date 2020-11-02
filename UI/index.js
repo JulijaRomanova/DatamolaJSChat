@@ -162,7 +162,7 @@ const chat = function () {
 
     const getMessage = (id) => messages.find(message => (message.id === id));
 
-    const validateMessage = (msg) => !!msg.text && (msg?.text.length <= 200);
+    const validateMessage = (msg) => !!msg.text && (msg.text.length <= 200);
 
     const addMessage = (msg) => {
         if (validateMessage(msg)) {
@@ -177,8 +177,11 @@ const chat = function () {
 
     const editObj = {
         text: (elem, text) => text ? elem.text = text : elem.text,
-        isPersonal: (elem, isPersonal) => isPersonal && (elem.isPersonal = isPersonal),
-        to: (elem, to) => to ? (elem.to = to) : elem
+        to: (elem, to) => to ? (elem.to = to) : elem,
+        isPersonal: (elem, isPersonal) => {
+            isPersonal !== undefined ? (elem.isPersonal = isPersonal) : elem.isPersonal;
+            isPersonal === false ? (elem.to = '') : elem.isPersonal;
+        }
     };
 
     const editMessage = (id, msg) => {
@@ -236,7 +239,7 @@ const chat = function () {
     console.log('Edit message', editMessage('2', {text: 'Hello. Today is a beautiful day!'}));
     console.log(getMessage('2'));
 
-    console.log('Remove message', removeMessage('2'));
+    console.log('Remove message', removeMessage('3'));
     console.log(messages);
 
     return {
