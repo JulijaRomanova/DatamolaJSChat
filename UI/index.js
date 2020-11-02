@@ -1,6 +1,8 @@
 const chat = function () {
     let count = 1;
     const generateId = () => (count++).toString();
+    let currentAuthor = 'Beriozko Maria';
+
     const messages = [
         {
             id: generateId(),
@@ -148,42 +150,49 @@ const chat = function () {
     const getMessages = (skip = 0, top = 10, filterConfig = null) => {
         return Object
             .assign([], messages)
-            .sort(dateComparatorDesc)
-            .slice(skip, skip + top)
             .filter(message => filterConfig
                 ? Object.keys(filterConfig).map(key =>
                     checkFilter(message, filterConfig, key))
                     .reduce((result, key) => result & key)
                 : true
             )
+            .sort(dateComparatorDesc)
+            .slice(skip, skip + top)
     };
 
     const getMessage = (id) => messages.find(message => (message.id === id));
 
-    const validateMessage = (msg) => !!Object.keys(msg).length && msg.id && msg.text && msg.createdAt && msg.author
-        && (msg.text.length <= 200)
-        && !messages.find(message => (message.id === msg.id));
+    const validateMessage = (msg) => !!msg.text && (msg.text.length <= 200);
 
     const addMessage = (msg) => {
         if (validateMessage(msg)) {
+            msg.id = generateId();
+            msg.author = currentAuthor;
+            msg.createdAt = new Date();
             messages.push(msg);
             return true;
         }
         return false;
     };
 
-    const editMessage = (id, msg) => {
-        delete msg.id;
-        delete msg.author;
-        delete msg.createdAt;
-        const msgIndex = messages.findIndex((msg) => msg.id === id);
-        if (msg?.text > 200) {
-            return false;
+    const editObj = {
+        text: (elem, text) => text ? elem.text = text : elem.text,
+        to: (elem, to) => to ? (elem.to = to) : elem,
+        isPersonal: (elem, isPersonal) => {
+            isPersonal !== undefined ? (elem.isPersonal = isPersonal) : elem.isPersonal;
+            isPersonal === false ? (elem.to = '') : elem.isPersonal;
         }
-        Object.keys(msg).forEach(key =>
-            messages[msgIndex][key] = msg[key]
-        );
-        return true;
+    };
+
+    const editMessage = (id, msg) => {
+        const msgIndex = messages.findIndex((msg) => msg.id === id);
+        const elem = Object.assign({}, messages[msgIndex]);
+        Object.keys(editObj).every(key => editObj[key](elem, msg[key]));
+        if (validateMessage(elem)) {
+            messages[msgIndex] = elem;
+            return true;
+        }
+        return false;
     };
     const removeMessage = (id) => {
         const msgIndex = messages.findIndex(msg => msg.id === id);
@@ -196,9 +205,9 @@ const chat = function () {
 
     console.log('getMessages with out parameters\n', getMessages());
     console.log('getMessages(10,10)\n', getMessages(10, 10));
-    console.log('getMessages(10, 10, {author: \'Maria\',\n' +
+    console.log('getMessages(0, 10, {author: \'Maria\',\n' +
         '            dateFrom: new Date(\'2020-10-12T23:00:00\'),\n' +
-        '            dateTo: new Date(\'2020-10-12T23:07:00\')})\n', getMessages(10, 10,
+        '            dateTo: new Date(\'2020-10-12T23:07:00\')})\n', getMessages(0, 10,
         {
             author: 'Maria',
             dateFrom: new Date('2020-10-12T23:00:00'),
@@ -219,18 +228,18 @@ const chat = function () {
         createdAt: new Date('2020-10-12T23:17:00'),
         author: 'Beriozko Maria'
     };
-    console.log('Validate message with already existing id\n', validateMessage(getMessage('15')));
+
     console.log('Validate message with length of text more than 200\n', validateMessage(badMsg));
     console.log('Validate message\n', validateMessage(newMsg));
 
-    console.log('Add not valid message\n', addMessage(getMessage('15')));
+    console.log('Add not valid message\n', addMessage(badMsg));
     console.log('Add valid message\n', addMessage(newMsg));
     console.log(getMessages(0, 10));
 
     console.log('Edit message', editMessage('2', {text: 'Hello. Today is a beautiful day!'}));
-    console.log(messages);
+    console.log(getMessage('2'));
 
-    console.log('Remove message', removeMessage('2'));
+    console.log('Remove message', removeMessage('3'));
     console.log(messages);
 
     return {
