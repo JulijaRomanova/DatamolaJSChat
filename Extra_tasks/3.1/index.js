@@ -1,6 +1,9 @@
 extra = function () {
     const maxSumSubArr = (arr = [-2, 1, -3, 4, -1, 2, 1, -5, 4]) => {
-        let res = arr[0];
+        if(!arr.length) {
+            return 0;
+        }
+        let res = 0;
         let sum = 0;
         for (let el of arr) {
             sum += el;
