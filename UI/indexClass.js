@@ -1,5 +1,21 @@
 class Message {
-    _user = 'Maria Beriozko';
+
+    constructor(text = '', to = null, id = null, createdAt = null, author = null, isPersonal = null) {
+        this._count = 1;
+        this._user = 'Maria Beriozko';
+        this._id = id || this._generateId();
+        this.text = text;
+        this._createdAt = createdAt || new Date();
+        this._author = author || this._user;
+        // eslint-disable-next-line
+        this.isPersonal = isPersonal ?? (!!to);
+        this._to = to;
+    }
+
+    print(){
+        console.log(`${this._id} ${this.to}`)
+    }
+    _generateId = () => (this._count++).toString();
 
     get user() {
         return this._user;
@@ -8,19 +24,6 @@ class Message {
     set user(user){
         this._user = user;
     }
-    _count = 1;
-
-    _generateId = () => (this._count++).toString();
-
-    constructor(text = '', to = null, id = null, createdAt = null, author = null, isPersonal = null) {
-        this._id = id || this._generateId();
-        this.text = text;
-        this._createdAt = createdAt || new Date();
-        this._author = author || this._user;
-        this.isPersonal = isPersonal ?? !!to;
-        this._to = to;
-    }
-
     get id() {
         return this._id;
     }
@@ -63,6 +66,7 @@ class Message {
 }
 
 let m = new Message('abc');
+m.print();
 console.log(m);
 m.id = '123';
 console.log(m);
