@@ -171,25 +171,22 @@ const chat = (function () {
   };
 
   const editObj = {
-    text: (elem, text) => {
-        elem.text = text;
-    },
-    to: (elem, to) => {
-        elem.to = to;
-        elem.isPersonal = true;
-    },
-    isPersonal: (elem, isPersonal) => {
-        elem.isPersonal = isPersonal;
-        if (!isPersonal) {
-            elem.to = '';
-        }
-    },
+      text: (elem, text) => {
+          if (text) elem.text = text;
+      },
+      to: (elem, to) => {
+          if (to) elem.to = to;
+      },
+      isPersonal: (elem, isPersonal) => {
+          if (isPersonal !== undefined) elem.isPersonal = isPersonal;
+          if (isPersonal === false) elem.to = '';
+      },
   };
 
   const editMessage = (id, msg) => {
     const msgIndex = messages.findIndex((message) => message.id === id);
     const elem = { ...messages[msgIndex] };
-    Object.keys(msg).every((key) => editObj[key](elem, msg[key]));
+    Object.keys(editObj).every((key) => editObj[key](elem, msg[key]) || true);
     if (validateMessage(elem)) {
       messages[msgIndex] = elem;
       return true;
@@ -204,7 +201,7 @@ const chat = (function () {
     messages.splice(msgIndex, 1);
     return true;
   };
-    /* eslint-disable no-alert, no-console */
+
   console.log('getMessages with out parameters\n', getMessages());
   console.log('getMessages(10,10)\n', getMessages(10, 10));
   console.log('getMessages(0, 10, {author: \'Maria\',\n'
@@ -243,7 +240,6 @@ const chat = (function () {
 
   console.log('Remove message', removeMessage('3'));
   console.log(messages);
-    /* eslint-enable no-alert, no-console */
 
   return {
     messages,

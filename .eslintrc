@@ -5,7 +5,6 @@
     "no-nested-ternary": "off",
     "no-param-reassign": "off",
     "no-return-assign": "off",
-    "indent": "off",
-    "parser": "babel-eslint"
+    "indent": "off"
   }
 }
