@@ -1,0 +1,40 @@
+{
+  "extends": ["airbnb/base"],
+  "rules": {
+    "no-plusplus": "off",
+    "no-nested-ternary": "off",
+    "no-param-reassign": "off",
+    "no-return-assign": "off",
+    "object-curly-spacing": "warn",
+    "comma-spacing": "off",
+    "prefer-const": "off",
+    "semi": "off",
+    "curly": "off",
+    "wrap-iife": "off",
+    "no-shadow": "off",
+    "comma-dangle": "off",
+    "keyword-spacing": "off",
+    "space-before-blocks": "off",
+    "no-multi-spaces": "off",
+    "no-extra-semi": "off",
+    "padded-blocks": "off",
+    "space-in-parens": "off",
+    "no-underscore-dangle": "off",
+    "lines-between-class-members": "off",
+    "nonblock-statement-body-position": "off",
+    "max-classes-per-file": "off",
+    "no-multiple-empty-lines": "off",
+    "space-before-function-paren": "off",
+    "indent": "off",
+    "no-trailing-spaces": "off",
+    "prefer-rest-params": "warn"
+
+  },
+  "parserOptions": {
+    "ecmaVersion": 2020,
+    "ecmaFeatures": {
+      "experimentalObjectRestSpread": true
+    }
+  }
+
+}

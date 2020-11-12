@@ -1,0 +1,35 @@
+{
+  "name": "DatamolaChat",
+  "version": "1.0.0",
+  "description": "Create project",
+  "main": "index.js",
+  "dependencies": {
+    "eslint-config-airbnb": "^18.2.1",
+    "material-design-icons": "^3.0.1"
+  },
+  "devDependencies": {
+    "eslint": "^7.13.0",
+    "eslint-config-airbnb-base": "^14.2.1",
+    "eslint-config-prettier": "^6.15.0",
+    "eslint-plugin-html": "^6.1.0",
+    "eslint-plugin-import": "^2.22.1",
+    "eslint-plugin-jsx-a11y": "^6.4.1",
+    "eslint-plugin-prettier": "^3.1.4",
+    "prettier": "^2.1.2"
+  },
+  "scripts": {
+    "lint": "eslint ./UI",
+    "lint-fix": "eslint ./UI --fix"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JulijaRomanova/DatamolaJSChat.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/JulijaRomanova/DatamolaJSChat/issues"
+  },
+  "homepage": "https://github.com/JulijaRomanova/DatamolaJSChat#readme"
+}
