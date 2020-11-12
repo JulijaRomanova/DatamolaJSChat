@@ -26,7 +26,8 @@
     "no-multiple-empty-lines": "off",
     "space-before-function-paren": "off",
     "indent": "off",
-    "no-trailing-spaces": "off"
+    "no-trailing-spaces": "off",
+    "prefer-rest-params": "warn"
 
   },
   "parserOptions": {
