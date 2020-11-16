@@ -100,7 +100,7 @@ class MessageList {
 
     addAll(msgs) {
         const noValidMsgs = [];
-        msgs.filter((msg) => (MessageList.validate(msg)
+        msgs.forEach((msg) => (MessageList.validate(msg)
             ? this.messages.push(msg)
             : noValidMsgs.push(msg)));
         return noValidMsgs;
