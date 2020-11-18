@@ -1,4 +1,4 @@
-const user = 'Beriozko Maria';
+let user = 'Beriozko Maria';
 
 const Counter = (function () {
     let count = 1;
@@ -33,7 +33,9 @@ class Message {
 
     set id(id) {
         try {
-            if (this.id !== id) { throw new Error('Immutable field'); }
+            if (this.id !== id) {
+                throw new Error('Immutable field');
+            }
         } catch (e) {
             console.log(e.message);
         }
@@ -45,7 +47,9 @@ class Message {
 
     set createdAt(createdAt) {
         try {
-            if (this._createdAt !== createdAt) { throw new Error('Immutable field'); }
+            if (this._createdAt !== createdAt) {
+                throw new Error('Immutable field');
+            }
         } catch (e) {
             console.log(e.message);
         }
@@ -57,7 +61,9 @@ class Message {
 
     set author(author) {
         try {
-            if (this._author !== author) { throw new Error('Immutable field'); }
+            if (this._author !== author) {
+                throw new Error('Immutable field');
+            }
         } catch (e) {
             console.log(e.message);
         }
@@ -115,7 +121,7 @@ class MessageList {
     }
 
     set messages(messages) {
-        if(messages.length === 0){
+        if (messages.length === 0) {
             this._messages = [];
         } else {
             messages.forEach((msg) => (MessageList.validate(msg)
@@ -188,14 +194,14 @@ class MessageList {
         }
     }
 
-    static _abilityToView(message) {
+    _abilityToView(message) {
         return (message.author === this.user || message.to === this.user || message.to === '');
     }
 
     getPage(skip = 0, top = 10, filterConfig = null) {
         return Object
             .assign([], this.messages)
-            .filter((message) => MessageList._abilityToView(message))
+            .filter((message) => this._abilityToView(message))
             .filter((message) => (filterConfig
                 ? Object.keys(filterConfig)
                     .map((key) => MessageList._checkFilter(message, filterConfig, key))
@@ -204,6 +210,130 @@ class MessageList {
             .sort(MessageList._dateComparatorDesc)
             .slice(skip, skip + top);
     }
+}
+
+class UserList {
+    constructor(users, activeUsers) {
+        this._users = users;
+        this._activeUsers = activeUsers;
+    }
+
+    set users(users) {
+        this._users = users;
+    }
+
+    get users() {
+        return this._users;
+    }
+
+    set activeUsers(actUsers) {
+        this._activeUsers = actUsers;
+    }
+
+    get activeUsers() {
+        return this._activeUsers;
+    }
+
+    get noActiveUsers() {
+        let noActiveUsers = Object.assign([], this.users);
+        this.activeUsers.forEach((act) => {
+            noActiveUsers.splice(noActiveUsers.indexOf(act), 1)
+        });
+        return noActiveUsers;
+    }
+}
+
+class HeaderView {
+    constructor(containerId) {
+        this.containerId = containerId;
+    }
+
+    display(user) {
+        const UserHeader = document.getElementById(this.containerId);
+        UserHeader.innerText = user ? user.replace(' ', '\n') : 'No\nName';
+    }
+}
+
+class MessagesView {
+    constructor(containerId) {
+        this.containerId = containerId;
+    }
+
+    static isMainUserMessage(msg) {
+        return (msg.author === user)
+            ? 'main-user-message'
+            : 'other-message';
+    }
+
+    static isPersonalMessage(msg) {
+        return msg.to === user
+            ? 'special-message'
+            : '';
+    }
+
+    _addMessage(msg) {
+        const msgTpl = document.getElementById('msg-template');
+        const msgs = document.getElementById(this.containerId);
+        const fr = new DocumentFragment();
+        const el = msgTpl.content.cloneNode(true);
+        el.querySelector('.message').id = msg.id;
+        el.querySelector('.message').classList.add(MessagesView.isMainUserMessage(msg));
+        if (msg.author === user) {
+            el.querySelector('.message-edit').textContent = 'create';
+            el.querySelector('.message-delete').textContent = 'close';
+        }
+        const isPersonalMsg = MessagesView.isPersonalMessage(msg);
+        if (isPersonalMsg) el.querySelector('.message').classList.add(isPersonalMsg);
+        el.querySelector('.short-name').textContent = msg.author.charAt(0);
+        el.querySelector('.user-name').textContent = msg.author;
+        el.querySelector('.text').textContent = msg.text;
+        el.querySelector('.message-date').textContent = msg.createdAt.toLocaleString();
+        fr.appendChild(el);
+        msgs.prepend(fr);
+    }
+
+    _clearAllMessages() {
+        const msgs = document.getElementById(this.containerId);
+        while (msgs.firstChild) {
+            msgs.removeChild(msgs.firstChild);
+        }
+    }
+
+
+    display(msgs) {
+        this._clearAllMessages();
+        msgs.forEach((msg) => {
+            this._addMessage(msg);
+        });
+    }
+}
+
+class UsersView {
+    constructor(containerId) {
+        this.containerId = containerId;
+    }
+
+    _addUsers(list, isActive) {
+        const userTpl = document.getElementById('user-template');
+        const users = document.getElementById(this.containerId);
+        const fr = new DocumentFragment();
+        list.forEach((usr) => {
+            if(usr !== user) {
+                const el = userTpl.content.cloneNode(true);
+                el.querySelector('.short-name').textContent = usr.charAt(0);
+                el.querySelector('#user-name').textContent = usr;
+                if (!isActive) el.querySelector('.create-new-mess').classList.add('no-visible');
+                fr.appendChild(el);
+            }
+        });
+        users.appendChild(fr);
+    }
+
+    display(noActiveUsers, activeUsers) {
+        this._addUsers(activeUsers, true);
+        this._addUsers(noActiveUsers, false);
+    }
+
 }
 
 const mess = [
@@ -250,43 +380,55 @@ const mess = [
         'Ivanova Katya', new Date('2020-10-12T23:22:00')),
     new Message('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'),
 ];
-try {
-    const messages = new MessageList(mess);
-    console.log('All msgs: ', messages);
 
-    console.log('Change id = 1');
-    messages.get('1').id = 'Bad id';
-    console.log('Get with id =\'2\'', messages.get('2'));
 
-    console.log('Add message with parameters {text: \'Good day, deer!\', to: \'Grigorchik Ann\'}');
-    messages.add({ text: 'Good day, deer!', to: 'Grigorchik Ann' });
-    console.log(messages.get('22'));
+const msgsModel = new MessageList(mess);
+const userL = new UserList(['Gaponenko Arina', 'Grigorchik Ann', 'Alhimenok Valeria',
+        'Beriozko Maria', 'Holubev Sergei', 'Mironov Andrei', 'Borisevich Daria', 'Ivanova Katya'],
+    ['Beriozko Maria', 'Holubev Sergei', 'Mironov Andrei', 'Borisevich Daria']);
 
-    console.log('Edit with author !== user');
-    console.log(messages.edit('2', { text: 'Good morning, deer!' }));
-    console.log(messages.get('2'));
+const vHeader = new HeaderView('user-header');
+const vMessages = new MessagesView('msgs-container');
+const vUsers = new UsersView('users');
 
-    console.log('Edit with author === user');
-    console.log(messages.edit('3', { text: 'Good morning, deer!' }));
-    console.log(messages.get('3'));
 
-    console.log('Remove msg with id = 2 and user !== author');
-    console.log(messages.remove('2'));
-    console.log(messages.get('2'));
 
-    console.log('Remove msg with id = 3 and user === author');
-    console.log(messages.remove('3'));
-    console.log(messages.get('3'));
+const setCurrentUser = (user) => vHeader.display(user);
+const showMessages = (skip = 0, top = 10, filterConfig) => {
+    vMessages.display(msgsModel.getPage(skip, top, filterConfig));
+};
 
-    console.log('filterConfig{ text: \'+\', dateTo: new Date(\'2020-11-10T23:16:50\')}',
-        messages.getPage(0, 10, { text: '+', dateTo: new Date('2020-11-10T23:16:50') }));
+const addMessage = (msg) => {
+    if (msgsModel.add(msg)) {
+        showMessages(0, 10);
+    }
+};
+const editMessage = (id, msgEdit) => {
+    if (msgsModel.edit(id, msgEdit)) {
+        vMessages.display(msgsModel.getPage(0, 20));
+    }
+};
+const removeMessage = (id) => {
+    if (msgsModel.remove(id)) {
+        vMessages.display(msgsModel.getPage(0, 20));
+    }
+};
 
-    console.log('Clear');
-    messages.clear();
-    console.log(messages);
+const  showUsers = () => {
+    vUsers.display(userL.noActiveUsers, userL.activeUsers);
+};
 
-    console.log('addAll. No valid messages:', messages.addAll(mess));
-    console.log(messages);
-} catch (e) {
-    console.log(e.message);
-}
+setCurrentUser(user);
+showMessages(0, 20);
+addMessage(new Message('Tell me about all!', 'Grigorchik Ann', true,
+    'Beriozko Maria', new Date()));
+editMessage('3', { text: 'Hello. How are you?', to: 'Mironov Andrei' });
+removeMessage('23');
+user = 'Mironov Andrei';
+setCurrentUser(user);
+showMessages(0, 20);
+showUsers();
+
+
+
+
