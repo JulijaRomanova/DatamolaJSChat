@@ -27,7 +27,9 @@
     "space-before-function-paren": "off",
     "indent": "off",
     "no-trailing-spaces": "off",
-    "prefer-rest-params": "warn"
+    "prefer-rest-params": "warn",
+    "no-undef": "warn",
+    "prefer-destructuring": "warn"
 
   },
   "parserOptions": {
