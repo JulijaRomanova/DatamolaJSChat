@@ -155,7 +155,7 @@ header, footer {
 
 .users {
     position: absolute;
-    visibility: visible;
+    visibility: hidden;
     z-index: 5;
     width: 50%;
     height: 46%;

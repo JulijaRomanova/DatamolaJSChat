@@ -271,6 +271,20 @@ class MessagesView {
             : '';
     }
 
+    static dNoTime(date) {
+        return date.setHours(0, 0, 0, 0);
+    }
+
+    static formatDate(date) {
+        const tmp = new Date(date.valueOf());
+        const todayDate = new Date();
+        if ((MessagesView.dNoTime(todayDate) - MessagesView.dNoTime(tmp)) === 0) {
+            return date.toLocaleString().split(' ')[1];
+        }
+        return date.toLocaleString();
+    }
+
+
     _addMessage(msg) {
         const msgTpl = document.getElementById('msg-template');
         const msgs = document.getElementById(this.containerId);
@@ -287,7 +301,7 @@ class MessagesView {
         el.querySelector('.short-name').textContent = msg.author.charAt(0);
         el.querySelector('.user-name').textContent = msg.author;
         el.querySelector('.text').textContent = msg.text;
-        el.querySelector('.message-date').textContent = msg.createdAt.toLocaleString();
+        el.querySelector('.message-date').textContent = MessagesView.formatDate(msg.createdAt);
         fr.appendChild(el);
         msgs.prepend(fr);
     }
@@ -318,7 +332,7 @@ class UsersView {
         const users = document.getElementById(this.containerId);
         const fr = new DocumentFragment();
         list.forEach((usr) => {
-            if(usr !== user) {
+            if (usr !== user) {
                 const el = userTpl.content.cloneNode(true);
                 el.querySelector('.short-name').textContent = usr.charAt(0);
                 el.querySelector('#user-name').textContent = usr;
@@ -392,7 +406,6 @@ const vMessages = new MessagesView('msgs-container');
 const vUsers = new UsersView('users');
 
 
-
 const setCurrentUser = (user) => vHeader.display(user);
 const showMessages = (skip = 0, top = 10, filterConfig) => {
     vMessages.display(msgsModel.getPage(skip, top, filterConfig));
@@ -414,8 +427,13 @@ const removeMessage = (id) => {
     }
 };
 
-const  showUsers = () => {
+const showUsers = () => {
     vUsers.display(userL.noActiveUsers, userL.activeUsers);
+};
+
+const changeVisibleUsers = () => {
+    const users = document.getElementById('users');
+    users.style.visibility = (users.style.visibility === 'visible') ? 'hidden' : 'visible';
 };
 
 setCurrentUser(user);
@@ -423,10 +441,12 @@ showMessages(0, 20);
 addMessage(new Message('Tell me about all!', 'Grigorchik Ann', true,
     'Beriozko Maria', new Date()));
 editMessage('3', { text: 'Hello. How are you?', to: 'Mironov Andrei' });
-removeMessage('23');
+removeMessage('1');
 user = 'Mironov Andrei';
 setCurrentUser(user);
 showMessages(0, 20);
+
+changeVisibleUsers();
 showUsers();
 
 
