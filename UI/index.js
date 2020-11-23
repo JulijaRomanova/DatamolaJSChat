@@ -313,12 +313,19 @@ class MessagesView {
         }
     }
 
+    display(msgs, oper) {
+        switch (oper) {
+            case 'addMsg':
+                this._addMessage(msgs);
+                break;
+            default:
+                this._clearAllMessages();
+                msgs.forEach((msg) => {
+                    this._addMessage(msg);
+                });
+                break;
+        }
 
-    display(msgs) {
-        this._clearAllMessages();
-        msgs.forEach((msg) => {
-            this._addMessage(msg);
-        });
     }
 }
 
@@ -406,24 +413,30 @@ const vMessages = new MessagesView('msgs-container');
 const vUsers = new UsersView('users');
 
 
-const setCurrentUser = (user) => vHeader.display(user);
-const showMessages = (skip = 0, top = 10, filterConfig) => {
+const setCurrentUser = (user) => {
+    msgsModel.user = user;
+    vHeader.display(user)
+};
+
+const showMessages = (skip = 0, top = 20, filterConfig) => {
     vMessages.display(msgsModel.getPage(skip, top, filterConfig));
+    const cont = document.getElementById('msgs-container');
+    cont.lastElementChild.scrollIntoView({ block: 'end' });
 };
 
 const addMessage = (msg) => {
     if (msgsModel.add(msg)) {
-        showMessages(0, 10);
+        vMessages.display(msgsModel.getPage(0, 10));
     }
 };
 const editMessage = (id, msgEdit) => {
     if (msgsModel.edit(id, msgEdit)) {
-        vMessages.display(msgsModel.getPage(0, 20));
+        vMessages.display(msgsModel.getPage(0, 10));
     }
 };
 const removeMessage = (id) => {
     if (msgsModel.remove(id)) {
-        vMessages.display(msgsModel.getPage(0, 20));
+        vMessages.display(msgsModel.getPage(0, 10));
     }
 };
 
@@ -437,15 +450,15 @@ const changeVisibleUsers = () => {
 };
 
 setCurrentUser(user);
-showMessages(0, 20);
+showMessages(0, 10);
 addMessage(new Message('Tell me about all!', 'Grigorchik Ann', true,
-    'Beriozko Maria', new Date()));
+   'Beriozko Maria', new Date()));
 editMessage('3', { text: 'Hello. How are you?', to: 'Mironov Andrei' });
 removeMessage('1');
 user = 'Mironov Andrei';
 setCurrentUser(user);
 showMessages(0, 20);
-
+editMessage('2', { text: 'Hello. How are you?' });
 changeVisibleUsers();
 showUsers();
 
