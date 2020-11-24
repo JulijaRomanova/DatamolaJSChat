@@ -452,7 +452,7 @@ const changeVisibleUsers = () => {
 setCurrentUser(user);
 showMessages(0, 10);
 addMessage(new Message('Tell me about all!', 'Grigorchik Ann', true,
-   'Beriozko Maria', new Date()));
+    'Beriozko Maria', new Date()));
 editMessage('3', { text: 'Hello. How are you?', to: 'Mironov Andrei' });
 removeMessage('1');
 user = 'Mironov Andrei';
@@ -461,7 +461,3 @@ showMessages(0, 20);
 editMessage('2', { text: 'Hello. How are you?' });
 changeVisibleUsers();
 showUsers();
-
-
-
-
