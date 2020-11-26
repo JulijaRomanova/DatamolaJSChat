@@ -1,24 +1,19 @@
 let user = 'Beriozko Maria';
 
-const Counter = (function () {
-    let count = 1;
-    const generateId = () => (count++).toString();
-    return {
-        generateId,
-    };
-}());
 
 class Message {
     constructor(text = '', to = null, isPersonal = null, author = null, createdAt = null, id = null) {
         this._user = user;
-        this._id = id || Counter.generateId();
+        this._id = id || Message.generateMsgId();
         this._text = text;
         this._createdAt = createdAt || new Date();
         this._author = author || this.user;
         this.isPersonal = isPersonal ?? (!!to);
         this._to = to || '';
     }
-
+    static generateMsgId(){
+        return `msg-${Math.floor(Math.random() * Number.MAX_SAFE_INTEGER).toString(32)}`;
+    }
     get user() {
         return this._user;
     }
@@ -90,8 +85,7 @@ class Message {
         return this._text;
     }
 
-    editMessage(editObj = {}) {
-        const { text, to } = editObj;
+    editMessage(text, to) {
         this.to = to;
         this.text = text;
     }
@@ -100,15 +94,23 @@ class Message {
 class MessageList {
     constructor(messages) {
         this._messages = [];
-        messages.forEach((msg) => (MessageList.validate(msg) ? this._messages.push(msg) : false));
         this._user = user;
+        this.restore(messages);
     }
 
     addAll(msgs) {
         const noValidMsgs = [];
-        msgs.forEach((msg) => (MessageList.validate(msg)
-            ? this.messages.push(msg)
-            : noValidMsgs.push(msg)));
+        let mess;
+        msgs.forEach((msg) => {
+            mess = new Message(msg._text, msg._to, msg.isPersonal,
+                msg._author, new Date(msg._createdAt), msg._id);
+            if (MessageList.validate(mess)) {
+                this._messages.push(mess)
+            } else {
+                noValidMsgs.push(mess);
+            }
+        });
+        this.save();
         return noValidMsgs;
     }
 
@@ -146,10 +148,11 @@ class MessageList {
         return !!msg.text && (msg.text.length <= 200);
     }
 
-    add(msg) {
-        const addMsg = new Message(msg.text, msg.to, msg.isPersonal);
+    add(text, to) {
+        let addMsg = new Message(text, to);
         if (MessageList.validate(addMsg)) {
             this.messages.push(addMsg);
+            this.save();
             return true;
         }
         return false;
@@ -159,14 +162,15 @@ class MessageList {
         return (this.user && (msgIndex !== -1) && (this.user === this.messages[msgIndex].author));
     }
 
-    edit(id, msg) {
+    edit(id, text, to) {
         const msgIndex = this.messages.findIndex((message) => message.id === id);
         if (!this._isUser(id, msgIndex)) return false;
         const elem = new Message({ ...this.messages[msgIndex] });
-        elem.editMessage(msg);
+        elem.editMessage(text, to);
 
         if (MessageList.validate(elem)) {
-            this.messages[msgIndex].editMessage(elem);
+            this.messages[msgIndex].editMessage(text, to);
+            this.save();
             return true;
         }
         return false;
@@ -176,6 +180,7 @@ class MessageList {
         const msgIndex = this.messages.findIndex((message) => message.id === id);
         if (!this._isUser(id, msgIndex)) return false;
         this.messages.splice(msgIndex, 1);
+        this.save();
         return true;
     }
 
@@ -210,12 +215,33 @@ class MessageList {
             .sort(MessageList._dateComparatorDesc)
             .slice(skip, skip + top);
     }
+
+    lenghtShowMsgs(){
+        return this.getPage(0, this.messages.length).length
+    }
+
+    save() {
+        const serializedMsgs = JSON.stringify(this.messages);
+        localStorage.setItem('Messages', serializedMsgs);
+    }
+
+
+    restore(mess) {
+        const items = localStorage.getItem('Messages');
+        try {
+            this.clear();
+            this.addAll(JSON.parse(items) || mess);
+        } catch (e) {
+            this.messages = [];
+        }
+    }
 }
 
 class UserList {
     constructor(users, activeUsers) {
         this._users = users;
         this._activeUsers = activeUsers;
+        this.restore(users);
     }
 
     set users(users) {
@@ -240,6 +266,34 @@ class UserList {
             noActiveUsers.splice(noActiveUsers.indexOf(act), 1)
         });
         return noActiveUsers;
+    }
+
+    isUser(userName){
+        return this.users.includes(userName);
+    }
+
+    addUser(userName){
+        this.users.push(userName);
+        this.save();
+    }
+
+    static generateId(){
+        return Math.floor(Math.random() * Number.MAX_SAFE_INTEGER).toString(32);
+    }
+
+    save() {
+        const serializedUsers = JSON.stringify(this.users);
+        localStorage.setItem('Users', serializedUsers);
+    }
+
+
+    restore(users) {
+        const items = localStorage.getItem('Users');
+        try {
+            this.users = (JSON.parse(items) || users);
+        } catch (e) {
+            this.users = [];
+        }
     }
 }
 
@@ -291,8 +345,11 @@ class MessagesView {
         const fr = new DocumentFragment();
         const el = msgTpl.content.cloneNode(true);
         el.querySelector('.message').id = msg.id;
+        const msgId = msg.id.replace('msg-', '');
         el.querySelector('.message').classList.add(MessagesView.isMainUserMessage(msg));
         if (msg.author === user) {
+            el.querySelector('.message-edit').id = `edit-${msgId}`;
+            el.querySelector('.message-delete').id = `delete-${msgId}`;
             el.querySelector('.message-edit').textContent = 'create';
             el.querySelector('.message-delete').textContent = 'close';
         }
@@ -340,19 +397,210 @@ class UsersView {
         const fr = new DocumentFragment();
         list.forEach((usr) => {
             if (usr !== user) {
+                const usrId = UserList.generateId();
                 const el = userTpl.content.cloneNode(true);
                 el.querySelector('.short-name').textContent = usr.charAt(0);
                 el.querySelector('#user-name').textContent = usr;
-                if (!isActive) el.querySelector('.create-new-mess').classList.add('no-visible');
+                if (!isActive) {
+                    el.querySelector('.create-new-mess').classList.add('no-visible')
+                } else { el.querySelector('.create-new-mess').id = `new-mess-${usrId}` }
+                el.querySelector('.user').id = `user-${usrId}`;
                 fr.appendChild(el);
             }
         });
         users.appendChild(fr);
     }
 
+    _clearAllUsers() {
+        const users = document.getElementById(this.containerId);
+        while (users.firstChild) {
+            users.removeChild(users.firstChild);
+        }
+    }
+
+    visibleUsers(){
+        const users = document.getElementById(this.containerId);
+        users.style.visibility = (users.style.visibility === 'visible') ? 'hidden' : 'visible';
+        return users.style.visibility;
+    }
     display(noActiveUsers, activeUsers) {
-        this._addUsers(activeUsers, true);
-        this._addUsers(noActiveUsers, false);
+        this._clearAllUsers();
+        if(this.visibleUsers() === 'visible') {
+            this._addUsers(activeUsers, true);
+            this._addUsers(noActiveUsers, false);
+        }
+    }
+
+}
+
+class ChatController{
+    constructor(msgs, users, activeUsers){
+        this.skip = 0;
+        this.top = 10;
+        this.mMsgs = new MessageList(msgs);
+        this.vMsgs = new MessagesView('msgs-container');
+        this.mUsers = new UserList(users, activeUsers);
+        this.vUsers = new UsersView('users');
+        this.vHeader = new HeaderView('user-header');
+
+        this.doFilter = this.doFilter.bind(this);
+        this.addMessage = this.addMessage.bind(this);
+        this.addSpecialMessage = this.addSpecialMessage.bind(this);
+        this.usersVsFilters = this.usersVsFilters.bind(this);
+        this.editRemoveMsg = this.editRemoveMsg.bind(this);
+        this.getMore = this.getMore.bind(this);
+        this.login = this.login.bind(this);
+
+        document.forms.login.addEventListener('submit', this.login);
+        document.querySelector('#second-btn-log').addEventListener('click', this.login);
+        const msgsContainer = document.querySelector('#msgs-container');
+        msgsContainer.addEventListener('click', this.editRemoveMsg);
+        msgsContainer.addEventListener('scroll', this.getMore);
+        const sender = document.getElementById('sender');
+        sender.addEventListener('click', this.addMessage);
+
+        document.getElementById('addition-btn').addEventListener('click',this.usersVsFilters);
+        document.body.addEventListener('keydown', this.addMessage);
+        document.querySelector('.users').addEventListener('click', this.addSpecialMessage);
+
+        document.forms.filters.addEventListener('submit', this.doFilter);
+    }
+
+    setCurrentUser (userMain) {
+        this.mUsers.user = userMain;
+        this.vHeader.display(userMain);
+        user = userMain;
+    };
+
+    static noIsUsers(){
+        document.querySelector('#first-btn-log').innerText = 'Sign Up';
+        document.querySelector('#second-btn-log').innerText = 'Login';
+        document.querySelector('#rep-pass-block').style.visibility = 'visible';
+    }
+    static addNewUser(){
+        const userName = document.forms.login.name.value;
+        if(userName) this.mUsers.addUser(userName);
+        document.querySelector('#first-btn-log').innerText = 'Login';
+        document.querySelector('#second-btn-log').innerText = 'Sign Up';
+        document.querySelector('#rep-pass-block').style.visibility = 'hidden';
+    }
+
+    login(event){
+        event.preventDefault();
+        if(event.target.id !== 'login' && event.target.id !== 'second-btn-log') return;
+        const user = document.forms.login.name.value;
+        if(event.target.id === 'login' && this.mUsers.isUser(user)){
+            document.querySelector('.login').style.display = 'none';
+            document.querySelector('.main-page').style.display = 'flex';
+            this.setCurrentUser(user);
+            this.showMessages(this.skip, this.top);
+        } else if (document.querySelector('#second-btn-log').outerText === 'Sign Up'){
+            ChatController.noIsUsers();
+        } else if(document.querySelector('#second-btn-log').outerText === 'Login'){
+            ChatController.addNewUser();
+        }
+
+    }
+    showMessages(skip = 0, top = 10, filterConfig) {
+        this.vMsgs.display(this.mMsgs.getPage(skip, top, filterConfig));
+        const cont = document.getElementById('msgs-container');
+        cont.scrollTop = cont.scrollHeight;
+    }
+
+    addSpecialMessage(event){
+        if(event.currentTarget.id !== 'users') return;
+        document.querySelector('.to').textContent = `To: ${event.target.parentNode.children[1].textContent}`;
+        document.querySelector('.to').style.visibility = 'visible';
+        this.vUsers.visibleUsers();
+    }
+
+    addMessage(event) {
+        if(event.target.id !== 'sender' && !(event.key === 'Enter' && event.shiftKey)) return;
+        const textArea = document.getElementsByTagName('textarea')[0];
+        let to = document.querySelector('.to');
+        let toText = to.textContent.replace('To: ', '');
+        const editMode = document.querySelector('.edit-mode');
+        if(editMode.style.display === 'block'){
+            this.editMsg(editMode.id.replace('edit-mode', 'msg'), textArea.value, toText);
+            editMode.style.display = 'none';
+        } else if (textArea.value && this.mMsgs.add(textArea.value, toText)) {
+            this.vMsgs.display(this.mMsgs.getPage(this.skip, this.top));
+            const cont = document.getElementById('msgs-container');
+            cont.scrollTop = cont.scrollHeight;
+        }
+        to.style.visibility = 'hidden';
+        textArea.value = '';
+    }
+
+    removeMsg(event){
+        if (this.mMsgs.remove(event.target.id.replace('delete','msg'))) {
+            this.vMsgs.display(this.mMsgs.getPage(this.skip, this.top));
+        }
+    }
+    editMsg(id, text, to){
+        if (this.mMsgs.edit(id, text, to)) {
+            this.vMsgs.display(this.mMsgs.getPage(this.skip, this.top));
+        }
+    }
+
+    editRemoveMsg(event) {
+        if(event.target.className.includes('message-edit')){
+            const partId = event.target.id.replace('edit','');
+            const idMsg = `msg${partId}`;
+            document.querySelector('.edit-mode').style.display = 'block';
+            document.querySelector('.edit-mode').id = `edit-mode${partId}`;
+            document.querySelector('textarea').value = this.mMsgs.get(idMsg).text;
+            document.querySelector('.to').style.visibility = 'visible';
+            document.querySelector('.to').textContent = `To: ${this.mMsgs.get(idMsg).to}`;
+        } else if(event.target.className.includes('message-delete')){
+            this.removeMsg(event);
+        }
+    }
+
+
+    usersVsFilters(event){
+        if(event.target.id  === 'btn-users' || event.target.parentElement.id === 'btn-users') {
+            this.vUsers.display(this.mUsers.noActiveUsers, this.mUsers.activeUsers);
+        } else if (event.target.id  === 'btn-filters' || event.target.parentElement.id === 'btn-filters'){
+            const filters = document.querySelector('.filters');
+            filters.style.visibility = (filters.style.visibility === 'visible') ? 'hidden' : 'visible';
+        }
+    }
+
+    static fillFilterConfig(author, text, date){
+        const filterConfig = {};
+        if(author) filterConfig.author = author;
+        if(text) filterConfig.text = text;
+        if(date) {
+            const choice = new Date(date);
+            filterConfig.dateFrom = new Date(choice.setHours(0,0,0,0));
+            filterConfig.dateTo = new Date(choice.getFullYear(),
+                choice.getMonth(), choice.getDate() + 1);
+        }
+        return filterConfig;
+    }
+    doFilter(event){
+        event.preventDefault();
+        const author = event.currentTarget.userName.value;
+        const text = event.currentTarget.textMsg.value;
+        const date = event.currentTarget.dateMsg.value;
+        const filterConfig = ChatController.fillFilterConfig(author, text, date);
+        document.forms.filters.reset();
+        this.vMsgs.display(this.mMsgs.getPage(this.skip, this.top, filterConfig));
+        document.querySelector('.filters').style.visibility = 'hidden';
+
+    }
+
+    getMore(){
+        const cont = document.getElementById('msgs-container');
+        if(cont.scrollTop === 0){
+            if(this.mMsgs.lenghtShowMsgs() > this.top) {
+                this.top += 10;
+                cont.style['scroll-behavior'] = 'smooth';
+                this.vMsgs.display(this.mMsgs.getPage(this.skip, this.top));
+                cont.scrollTop = cont.offsetHeight;
+            }
+        }
     }
 
 }
@@ -402,62 +650,8 @@ const mess = [
     new Message('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'),
 ];
 
+const users = ['Gaponenko Arina', 'Grigorchik Ann', 'Alhimenok Valeria',
+    'Beriozko Maria', 'Holubev Sergei', 'Mironov Andrei', 'Borisevich Daria', 'Ivanova Katya'];
+const activeUsers = ['Beriozko Maria', 'Holubev Sergei', 'Mironov Andrei', 'Borisevich Daria'];
 
-const msgsModel = new MessageList(mess);
-const userL = new UserList(['Gaponenko Arina', 'Grigorchik Ann', 'Alhimenok Valeria',
-        'Beriozko Maria', 'Holubev Sergei', 'Mironov Andrei', 'Borisevich Daria', 'Ivanova Katya'],
-    ['Beriozko Maria', 'Holubev Sergei', 'Mironov Andrei', 'Borisevich Daria']);
-
-const vHeader = new HeaderView('user-header');
-const vMessages = new MessagesView('msgs-container');
-const vUsers = new UsersView('users');
-
-
-const setCurrentUser = (user) => {
-    msgsModel.user = user;
-    vHeader.display(user)
-};
-
-const showMessages = (skip = 0, top = 20, filterConfig) => {
-    vMessages.display(msgsModel.getPage(skip, top, filterConfig));
-    const cont = document.getElementById('msgs-container');
-    cont.lastElementChild.scrollIntoView({ block: 'end' });
-};
-
-const addMessage = (msg) => {
-    if (msgsModel.add(msg)) {
-        vMessages.display(msgsModel.getPage(0, 10));
-    }
-};
-const editMessage = (id, msgEdit) => {
-    if (msgsModel.edit(id, msgEdit)) {
-        vMessages.display(msgsModel.getPage(0, 10));
-    }
-};
-const removeMessage = (id) => {
-    if (msgsModel.remove(id)) {
-        vMessages.display(msgsModel.getPage(0, 10));
-    }
-};
-
-const showUsers = () => {
-    vUsers.display(userL.noActiveUsers, userL.activeUsers);
-};
-
-const changeVisibleUsers = () => {
-    const users = document.getElementById('users');
-    users.style.visibility = (users.style.visibility === 'visible') ? 'hidden' : 'visible';
-};
-
-setCurrentUser(user);
-showMessages(0, 10);
-addMessage(new Message('Tell me about all!', 'Grigorchik Ann', true,
-    'Beriozko Maria', new Date()));
-editMessage('3', { text: 'Hello. How are you?', to: 'Mironov Andrei' });
-removeMessage('1');
-user = 'Mironov Andrei';
-setCurrentUser(user);
-showMessages(0, 20);
-editMessage('2', { text: 'Hello. How are you?' });
-changeVisibleUsers();
-showUsers();
+const Controller = new ChatController(mess, users, activeUsers);

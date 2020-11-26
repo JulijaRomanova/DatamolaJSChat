@@ -31,7 +31,11 @@ body {
     flex-direction: column;
     height: 100%;
 }
-
+.material-icons {
+    background: none;
+    border: none;
+    outline: none;
+}
 .main-img-size {
     width: 4rem;
     height: 4rem;
@@ -172,11 +176,11 @@ header, footer {
     flex-direction: column;
     justify-content: center;
     position: absolute;
-    visibility: visible;
+    visibility: hidden;
     z-index: 5;
     width: 50%;
     padding: 1rem 0 0 0;
-    top: 6rem;
+    top: 2rem;
     right: 0;
     background: white;
     border: 1px solid black;
@@ -200,8 +204,9 @@ input {
     height: 1.7rem;
 }
 
-input:hover, input:active {
-    border-color: var(--main-orange)
+input:hover, input:focus {
+    border: 1px solid var(--main-orange);
+    outline: none;
 }
 
 .filter-error {
@@ -318,9 +323,18 @@ input:hover, input:active {
     .message {
         width: 100%;
     }
-    .users{
+    .users, .filters{
         width: 100%;
         height: 100%;
+    }
+    .login-form{
+        width: 70%!important;
+    }
+    .btn-log-positive{
+        width: 40%!important;
+    }
+    .btn-log-negative{
+        width: 30%!important;
     }
 }
 
@@ -416,7 +430,7 @@ input:hover, input:active {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin: 1rem;
+    margin: 0.2rem 1rem 1rem 1rem;
 
 }
 
@@ -424,6 +438,23 @@ input:hover, input:active {
     flex-grow: 1;
     border-radius: 0.3rem;
     margin-right: 1rem;
+}
+.edit-to-mode{
+    display: flex;
+    justify-content: space-between;
+    margin: 1rem 1rem 0 1rem;
+    font-family: Lato-Black, sans-serif;
+}
+
+.to{
+    color: var(--dark-green);
+    font-size: 1rem;
+    min-height: 1rem;
+}
+
+.edit-mode{
+    color: var(--main-orange);
+    display: none;
 }
 
 .sender {
@@ -435,11 +466,89 @@ input:hover, input:active {
 main {
     flex: 1;
     display: flex;
-    flex-direction: column;
     overflow: hidden;
-    position: relative;
+
 }
 
+.main-page{
+    display: none;
+    position: relative;
+    overflow: hidden;
+    flex-direction: column;
+    width: 100%;
+}
+.log-user-name{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.input-elem{
+    position: relative;
+    display: flex;
+    vertical-align: center;
+    align-items: center;
+    width: 100%;
+    margin: 1rem;
+}
+.pass{
+    width: 100%
+}
+.pass-icon{
+    position: absolute;
+    color: var(--turquoise);;
+    left: calc(100% - 2rem);
+}
+
+.necessary{
+    margin-right: 0.5rem;
+    color: var(--orange-red-error);
+}
+
+.btn-log-positive{
+    border: 1px solid white;
+    border-radius: 0.3rem;
+    width: 20%;
+    padding: 0.5rem;
+    background: var(--turquoise);
+    outline: none;
+}
+
+.btn-log-negative{
+    border: 1px solid white;
+    border-radius: 0.3rem;
+    width: 10%;
+    padding: 0.5rem;
+    background: var(--main-orange);
+    outline: none;
+    margin: 1rem;
+}
+
+.login{
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    width: 100%;
+
+}
+
+.login-form{
+    width: 50%;
+    margin: 5rem 0 1rem 0;
+}
+
+.to-main-page{
+    width: 100%;
+    border: 1px solid white;
+    border-radius: 0 0 0.3rem 0.3rem;
+    background: var(--dark-green);
+    outline: none;
+}
+
+.btns-log{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
 
 
 

@@ -29,7 +29,8 @@
     "no-trailing-spaces": "off",
     "prefer-rest-params": "warn",
     "no-undef": "warn",
-    "prefer-destructuring": "warn"
+    "prefer-destructuring": "warn",
+    "no-unused-vars": "warn"
 
   },
   "parserOptions": {

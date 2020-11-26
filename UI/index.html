@@ -21,61 +21,123 @@
     </div>
 </header>
 <main>
-    <div class="flex-elem">
-        <button class="btn more-users" tabindex="0">
-            <i class="material-icons main-icon">more_horiz</i>
-            <span class="tooltip place-center">Users</span>
-        </button>
-        <button class="btn">
-            <i class="material-icons main-icon">filter_list</i>
-            <span class="tooltip place-center">Filter</span>
-        </button>
-    </div>
-    <template id="user-template">
-        <div class="user">
-            <div class="circle">
-                <span class="short-name important-font-white"></span>
-            </div>
-            <span class="main-font-black" id="user-name"></span>
-            <i class="material-icons create-new-mess">chat_bubble</i>
-        </div>
-        <hr class="line">
-    </template>
-    <div class="users" id="users"></div>
+    <div class="login">
 
-    <template id="msg-template">
-        <article class="message">
-            <div class="message-avatar">
-                <div class="circle ">
+        <button class="to-main-page"  id="to-main-page">
+            <i class="material-icons main-icon">mail</i>
+        </button>
+
+
+        <form class="login-form" name="login" id="login">
+            <div class="log-user-name">
+                <div class="input-elem">
+                    <label for="name" class="necessary">*</label>
+                    <input id="name" class="pass" type="text" placeholder="Username">
+                </div>
+                <div class="input-elem">
+                    <label for="pass" class="necessary">*</label>
+                    <input id="pass" class="pass" type="password" placeholder="Password">
+                    <i class="pass-icon material-icons" >visibility_off</i>
+                </div>
+                <div class="input-elem no-visible" id="rep-pass-block">
+                    <label for="rep-pass" class="necessary">*</label>
+                    <input id="rep-pass"  class="pass" type="password" placeholder="Confirm Password">
+                    <i class="pass-icon material-icons">visibility_off</i>
+                </div>
+            </div>
+            <div class="btns-log">
+                <button class="btn-log-positive important-font-white" id="first-btn-log">
+                    Login
+                </button>
+            </div>
+        </form>
+        <button class="btn-log-negative important-font-white" id="second-btn-log">
+            Sign Up
+        </button>
+
+    </div>
+    <div class="main-page">
+        <div class="flex-elem" id="addition-btn">
+            <button class="btn more-users" id="btn-users">
+                <i class="material-icons main-icon">more_horiz</i>
+                <span class="tooltip place-center">Users</span>
+            </button>
+            <button class="btn" id ="btn-filters">
+                <i class="material-icons main-icon">filter_list</i>
+                <span class="tooltip place-center">Filter</span>
+            </button>
+        </div>
+
+        <template id="user-template">
+            <div class="user">
+                <div class="circle">
                     <span class="short-name important-font-white"></span>
                 </div>
+                <span class="main-font-black" id="user-name"></span>
+                <button class="material-icons create-new-mess">chat_bubble</button>
             </div>
-            <div class="message-all-info">
-                <div class="message-header">
-                    <span class="important-font-black user-name"></span>
-                    <div class="message-action">
-                        <i class="material-icons message-edit post-icon-size"></i>
-                        <i class="material-icons message-delete post-icon-size"></i>
+            <hr class="line">
+        </template>
+        <div class="users" id="users"></div>
+        <form class="filters" id ="filters" name="filters">
+            <div class="filter">
+                <span class="main-font-black filter-title">Username</span>
+                <input type="text" name="userName" class="main-font-black">
+            </div>
+            <div class="filter">
+                <span class="main-font-black filter-title" >Text of message</span>
+                <input type="text" name="textMsg" class="main-font-black">
+            </div>
+            <div class="filter">
+                <span class="main-font-black filter-title">Date</span>
+                <input class="main-font-black" name="dateMsg" type="date" >
+            </div>
+            <span class="filter-error font-error">There is no data that meets the filter!</span>
+            <div class="confirm-btns">
+
+                <button class="btn btn-negative important-font-white" >
+                    Back
+                </button>
+                <button class="btn btn-positive important-font-white">
+                    Apply
+                </button>
+
+            </div>
+        </form>
+
+        <template id="msg-template">
+            <article class="message">
+                <div class="message-avatar">
+                    <div class="circle ">
+                        <span class="short-name important-font-white"></span>
                     </div>
                 </div>
+                <div class="message-all-info">
+                    <div class="message-header">
+                        <span class="important-font-black user-name"></span>
+                        <div class="message-action">
+                            <button class="material-icons message-edit post-icon-size"></button>
+                            <button class="material-icons message-delete post-icon-size"></button>
+                        </div>
+                    </div>
 
-                <span class="main-font-black text" ></span>
-                <div class="message-date add-font-black"></div>
-            </div>
-        </article>
-    </template>
+                    <span class="main-font-black text" ></span>
+                    <div class="message-date add-font-black"></div>
+                </div>
+            </article>
+        </template>
 
-    <div class="more-message">
-        <button class="btn-more important-font-white">
-            More
-        </button>
-    </div>
-    <div class="messages-container" id="msgs-container">
-    </div>
+        <div class="messages-container" id="msgs-container">
+        </div>
 
-    <div class="send-message-container">
-        <textarea class="input-message" placeholder="Write your message, please ..."></textarea>
-        <div><i class="material-icons sender">send</i></div>
+        <div class="edit-to-mode">
+            <p class="to"></p>
+            <p class="edit-mode">Edit mode</p>
+        </div>
+        <div class="send-message-container">
+            <textarea class="input-message" placeholder="Write your message, please ..."></textarea>
+            <button class="material-icons sender" id="sender">send</button>
+        </div>
     </div>
 </main>
 <footer class="footer-elem">
