@@ -67,22 +67,23 @@ const list = [
     }
 ];
 
-function changeVisibility(el){
-    el.style.display = (el.style.display !== 'none') ? 'none' : 'block';
-}
-
-function walkChildren(el){
-    [...el.children].forEach((ch) => {
-        changeVisibility(ch);
-        if(ch.children) walkChildren(ch);
-    });
-}
-
 function hiddenVsVisible(event){
-    if(event.target.children){
-        walkChildren(event.target);
-    }
+    if(event.target.tagName !== 'SPAN') return;
+    const childrenUL = event.target.parentNode.querySelector('ul');
+    if(!childrenUL) return;
+    childrenUL.hidden = !childrenUL.hidden;
+}
+
+function liToSpan(){
+    let span;
+    document.querySelectorAll('li').forEach((el) => {
+        span = document.createElement('span');
+        el.prepend(span);
+        span.append(span.nextSibling);
+    });
+    document.querySelector('#list').addEventListener('click', hiddenVsVisible);
 }
 
 createList('my List', list);
-document.querySelector('#list').addEventListener('click', hiddenVsVisible);
+liToSpan();
+
