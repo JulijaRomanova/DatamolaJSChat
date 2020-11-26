@@ -471,10 +471,11 @@ main {
 }
 
 .main-page{
+    display: none;
     position: relative;
     overflow: hidden;
-    display: flex;
     flex-direction: column;
+    width: 100%;
 }
 .log-user-name{
     display: flex;
@@ -523,20 +524,30 @@ main {
 }
 
 .login{
-    //display: flex;
+    display: flex;
     align-items: center;
     flex-direction: column;
-    display: none;
+    width: 100%;
 
 }
 
 .login-form{
     width: 50%;
-    margin: 5rem 0 3rem 0;
+    margin: 5rem 0 1rem 0;
 }
 
 .to-main-page{
     width: 100%;
+    border: 1px solid white;
+    border-radius: 0 0 0.3rem 0.3rem;
+    background: var(--dark-green);
+    outline: none;
+}
+
+.btns-log{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 

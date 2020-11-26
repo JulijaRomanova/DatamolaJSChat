@@ -241,6 +241,7 @@ class UserList {
     constructor(users, activeUsers) {
         this._users = users;
         this._activeUsers = activeUsers;
+        this.restore(users);
     }
 
     set users(users) {
@@ -267,8 +268,32 @@ class UserList {
         return noActiveUsers;
     }
 
+    isUser(userName){
+        return this.users.includes(userName);
+    }
+
+    addUser(userName){
+        this.users.push(userName);
+        this.save();
+    }
+
     static generateId(){
         return Math.floor(Math.random() * Number.MAX_SAFE_INTEGER).toString(32);
+    }
+
+    save() {
+        const serializedUsers = JSON.stringify(this.users);
+        localStorage.setItem('Users', serializedUsers);
+    }
+
+
+    restore(users) {
+        const items = localStorage.getItem('Users');
+        try {
+            this.users = (JSON.parse(items) || users);
+        } catch (e) {
+            this.users = [];
+        }
     }
 }
 
@@ -414,9 +439,9 @@ class ChatController{
         this.top = 10;
         this.mMsgs = new MessageList(msgs);
         this.vMsgs = new MessagesView('msgs-container');
-        this.showMessages(this.skip, this.top);
         this.mUsers = new UserList(users, activeUsers);
         this.vUsers = new UsersView('users');
+        this.vHeader = new HeaderView('user-header');
 
         this.doFilter = this.doFilter.bind(this);
         this.addMessage = this.addMessage.bind(this);
@@ -424,7 +449,10 @@ class ChatController{
         this.usersVsFilters = this.usersVsFilters.bind(this);
         this.editRemoveMsg = this.editRemoveMsg.bind(this);
         this.getMore = this.getMore.bind(this);
+        this.login = this.login.bind(this);
 
+        document.forms.login.addEventListener('submit', this.login);
+        document.querySelector('#second-btn-log').addEventListener('click', this.login);
         const msgsContainer = document.querySelector('#msgs-container');
         msgsContainer.addEventListener('click', this.editRemoveMsg);
         msgsContainer.addEventListener('scroll', this.getMore);
@@ -438,6 +466,41 @@ class ChatController{
         document.forms.filters.addEventListener('submit', this.doFilter);
     }
 
+    setCurrentUser (userMain) {
+        this.mUsers.user = userMain;
+        this.vHeader.display(userMain);
+        user = userMain;
+    };
+
+    static noIsUsers(){
+        document.querySelector('#first-btn-log').innerText = 'Sign Up';
+        document.querySelector('#second-btn-log').innerText = 'Login';
+        document.querySelector('#rep-pass-block').style.visibility = 'visible';
+    }
+    static addNewUser(){
+        const userName = document.forms.login.name.value;
+        if(userName) this.mUsers.addUser(userName);
+        document.querySelector('#first-btn-log').innerText = 'Login';
+        document.querySelector('#second-btn-log').innerText = 'Sign Up';
+        document.querySelector('#rep-pass-block').style.visibility = 'hidden';
+    }
+
+    login(event){
+        event.preventDefault();
+        if(event.target.id !== 'login' && event.target.id !== 'second-btn-log') return;
+        const user = document.forms.login.name.value;
+        if(event.target.id === 'login' && this.mUsers.isUser(user)){
+            document.querySelector('.login').style.display = 'none';
+            document.querySelector('.main-page').style.display = 'flex';
+            this.setCurrentUser(user);
+            this.showMessages(this.skip, this.top);
+        } else if (document.querySelector('#second-btn-log').outerText === 'Sign Up'){
+            ChatController.noIsUsers();
+        } else if(document.querySelector('#second-btn-log').outerText === 'Login'){
+            ChatController.addNewUser();
+        }
+
+    }
     showMessages(skip = 0, top = 10, filterConfig) {
         this.vMsgs.display(this.mMsgs.getPage(skip, top, filterConfig));
         const cont = document.getElementById('msgs-container');
@@ -462,6 +525,8 @@ class ChatController{
             editMode.style.display = 'none';
         } else if (textArea.value && this.mMsgs.add(textArea.value, toText)) {
             this.vMsgs.display(this.mMsgs.getPage(this.skip, this.top));
+            const cont = document.getElementById('msgs-container');
+            cont.scrollTop = cont.scrollHeight;
         }
         to.style.visibility = 'hidden';
         textArea.value = '';
@@ -590,62 +655,3 @@ const users = ['Gaponenko Arina', 'Grigorchik Ann', 'Alhimenok Valeria',
 const activeUsers = ['Beriozko Maria', 'Holubev Sergei', 'Mironov Andrei', 'Borisevich Daria'];
 
 const Controller = new ChatController(mess, users, activeUsers);
-
-// const msgsModel = new MessageList(mess);
-// const userL = new UserList(['Gaponenko Arina', 'Grigorchik Ann', 'Alhimenok Valeria',
-//         'Beriozko Maria', 'Holubev Sergei', 'Mironov Andrei', 'Borisevich Daria', 'Ivanova Katya'],
-//     ['Beriozko Maria', 'Holubev Sergei', 'Mironov Andrei', 'Borisevich Daria']);
-//
-// const vHeader = new HeaderView('user-header');
-// const vMessages = new MessagesView('msgs-container');
-// const vUsers = new UsersView('users');
-//
-//
-// const setCurrentUser = (user) => {
-//     msgsModel.user = user;
-//     vHeader.display(user)
-// };
-//
-// const showMessages = (skip = 0, top = 20, filterConfig) => {
-//     vMessages.display(msgsModel.getPage(skip, top, filterConfig));
-//     const cont = document.getElementById('msgs-container');
-//     cont.lastElementChild.scrollIntoView({ block: 'end' });
-// };
-//
-// const addMessage = (msg) => {
-//     if (msgsModel.add(msg)) {
-//         vMessages.display(msgsModel.getPage(0, 10));
-//     }
-// };
-// const editMessage = (id, msgEdit) => {
-//     if (msgsModel.edit(id, msgEdit)) {
-//         vMessages.display(msgsModel.getPage(0, 10));
-//     }
-// };
-// const removeMessage = (id) => {
-//     if (msgsModel.remove(id)) {
-//         vMessages.display(msgsModel.getPage(0, 10));
-//     }
-// };
-//
-// const showUsers = () => {
-//     vUsers.display(userL.noActiveUsers, userL.activeUsers);
-// };
-//
-// const changeVisibleUsers = () => {
-//     const users = document.getElementById('users');
-//     users.style.visibility = (users.style.visibility === 'visible') ? 'hidden' : 'visible';
-// };
-//
-// setCurrentUser(user);
-// showMessages(0, 10);
-// addMessage(new Message('Tell me about all!', 'Grigorchik Ann', true,
-//     'Beriozko Maria', new Date()));
-// editMessage('3', { text: 'Hello. How are you?', to: 'Mironov Andrei' });
-// removeMessage('1');
-// user = 'Mironov Andrei';
-// setCurrentUser(user);
-// showMessages(0, 20);
-// editMessage('2', { text: 'Hello. How are you?' });
-// changeVisibleUsers();
-// showUsers();

@@ -23,12 +23,12 @@
 <main>
     <div class="login">
 
-        <button class="btn main-page"  id="to-main-page">
+        <button class="to-main-page"  id="to-main-page">
             <i class="material-icons main-icon">mail</i>
         </button>
 
 
-        <form class="login-form">
+        <form class="login-form" name="login" id="login">
             <div class="log-user-name">
                 <div class="input-elem">
                     <label for="name" class="necessary">*</label>
@@ -39,20 +39,22 @@
                     <input id="pass" class="pass" type="password" placeholder="Password">
                     <i class="pass-icon material-icons" >visibility_off</i>
                 </div>
-                <div class="input-elem" >
+                <div class="input-elem no-visible" id="rep-pass-block">
                     <label for="rep-pass" class="necessary">*</label>
-                    <input id="rep-pass" class="pass" type="password" placeholder="Confirm Password">
+                    <input id="rep-pass"  class="pass" type="password" placeholder="Confirm Password">
                     <i class="pass-icon material-icons">visibility_off</i>
                 </div>
             </div>
+            <div class="btns-log">
+                <button class="btn-log-positive important-font-white" id="first-btn-log">
+                    Login
+                </button>
+            </div>
         </form>
-
-        <button class="btn-log-positive important-font-white">
-            Login
-        </button>
-        <button class="btn-log-negative important-font-white">
+        <button class="btn-log-negative important-font-white" id="second-btn-log">
             Sign Up
         </button>
+
     </div>
     <div class="main-page">
         <div class="flex-elem" id="addition-btn">
