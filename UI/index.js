@@ -477,7 +477,7 @@ class ChatController{
         document.querySelector('#second-btn-log').innerText = 'Login';
         document.querySelector('#rep-pass-block').style.visibility = 'visible';
     }
-    static addNewUser(){
+    addNewUser(){
         const userName = document.forms.login.name.value;
         if(userName) this.mUsers.addUser(userName);
         document.querySelector('#first-btn-log').innerText = 'Login';
@@ -497,7 +497,7 @@ class ChatController{
         } else if (document.querySelector('#second-btn-log').outerText === 'Sign Up'){
             ChatController.noIsUsers();
         } else if(document.querySelector('#second-btn-log').outerText === 'Login'){
-            ChatController.addNewUser();
+            this.addNewUser();
         }
 
     }
