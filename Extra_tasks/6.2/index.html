@@ -3,8 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
+
+    <style>
+        @import "../../node_modules/material-design-icons/iconfont/material-icons.css";
+        *{
+            margin: 0;
+            padding: 0;
+        }
+        html{
+            height: 100%;
+        }
+        body{
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+        }
+        table{
+            border-collapse: collapse;
+        }
+        th{
+            background: #febb02;
+        }
+        td, th {
+            width: 5rem;
+            height: 5rem;
+            padding: 0.1rem;
+            border: 0.1rem solid white;
+            text-align: center;
+        }
+        div{
+            font-size: 4rem!important;
+            color: white;
+        }
+    </style>
+    <link rel="stylesheet" href="../../node_modules/material-design-icons/iconfont/material-icons.css">
+
+
 </head>
 <body>
+<template id="zero">
+    <div class="material-icons">panorama_fish_eye</div>
+</template>
+<template id="cross">
+    <div class="material-icons">clear</div>
+</template>
+<table id="cross-zero" >
+    <tr id="1"><th id="1.1"><th id="1.2"><th id="1.3"></tr>
+    <tr id="2"><th id="2.1"><th id="2.2"><th id="2.3"></tr>
+    <tr id="3"><th id="3.1"><th id="3.2"><th id="3.3"></tr>
+</table>
+
 
 </body>
+
+<script src="index.js"></script>
 </html>
