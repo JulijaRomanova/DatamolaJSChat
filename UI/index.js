@@ -1,25 +1,17 @@
-let user = 'Beriozko Maria';
+let user = '';
 
 
 class Message {
     constructor(text = '', to = null, isPersonal = null, author = null, createdAt = null, id = null) {
-        this._user = user;
         this._id = id || Message.generateMsgId();
         this._text = text;
         this._createdAt = createdAt || new Date();
-        this._author = author || this.user;
+        this._author = author || user;
         this.isPersonal = isPersonal ?? (!!to);
         this._to = to || '';
     }
     static generateMsgId(){
         return `msg-${Math.floor(Math.random() * Number.MAX_SAFE_INTEGER).toString(32)}`;
-    }
-    get user() {
-        return this._user;
-    }
-
-    set user(user) {
-        this._user = user;
     }
 
     get id() {
@@ -94,7 +86,6 @@ class Message {
 class MessageList {
     constructor(messages) {
         this._messages = [];
-        this._user = user;
         this.restore(messages);
     }
 
@@ -132,13 +123,6 @@ class MessageList {
 
     }
 
-    set user(user) {
-        this._user = user;
-    }
-
-    get user() {
-        return this._user;
-    }
 
     get(id) {
         return this._messages.find((message) => (message.id === id));
@@ -159,7 +143,7 @@ class MessageList {
     }
 
     _isUser(id, msgIndex) {
-        return (this.user && (msgIndex !== -1) && (this.user === this.messages[msgIndex].author));
+        return (user && (msgIndex !== -1) && (user === this.messages[msgIndex].author));
     }
 
     edit(id, text, to) {
@@ -199,15 +183,20 @@ class MessageList {
         }
     }
 
-    _abilityToView(message) {
-        return (message.author === this.user || message.to === this.user || message.to === '');
+    static _abilityToView(message) {
+        return (message.author === user || message.to === user || message.to === '');
+    }
+
+    static isEmptyFieldsFC(filterConfig){
+        return !filterConfig?.author && !filterConfig?.text
+            && !filterConfig?.dateTo && !filterConfig?.dateFrom;
     }
 
     getPage(skip = 0, top = 10, filterConfig = null) {
         return Object
             .assign([], this.messages)
-            .filter((message) => this._abilityToView(message))
-            .filter((message) => (filterConfig
+            .filter((message) => MessageList._abilityToView(message))
+            .filter((message) => (filterConfig && !MessageList.isEmptyFieldsFC(filterConfig)
                 ? Object.keys(filterConfig)
                     .map((key) => MessageList._checkFilter(message, filterConfig, key))
                     .reduce((result, key) => result && key)
@@ -320,7 +309,7 @@ class MessagesView {
     }
 
     static isPersonalMessage(msg) {
-        return msg.to === user
+        return (msg.to === user && user !== '')
             ? 'special-message'
             : '';
     }
@@ -358,6 +347,7 @@ class MessagesView {
         el.querySelector('.short-name').textContent = msg.author.charAt(0);
         el.querySelector('.user-name').textContent = msg.author;
         el.querySelector('.text').textContent = msg.text;
+        if(msg.to && msg.to !== user) el.querySelector('.to-name').textContent = `To: ${msg.to}`;
         el.querySelector('.message-date').textContent = MessagesView.formatDate(msg.createdAt);
         fr.appendChild(el);
         msgs.prepend(fr);
@@ -370,19 +360,11 @@ class MessagesView {
         }
     }
 
-    display(msgs, oper) {
-        switch (oper) {
-            case 'addMsg':
-                this._addMessage(msgs);
-                break;
-            default:
-                this._clearAllMessages();
-                msgs.forEach((msg) => {
-                    this._addMessage(msg);
-                });
-                break;
-        }
-
+    display(msgs) {
+        this._clearAllMessages();
+        msgs.forEach((msg) => {
+            this._addMessage(msg);
+        });
     }
 }
 
@@ -442,6 +424,8 @@ class ChatController{
         this.mUsers = new UserList(users, activeUsers);
         this.vUsers = new UsersView('users');
         this.vHeader = new HeaderView('user-header');
+        this.useFilter = false;
+        this.setCurrentUser(user);
 
         this.doFilter = this.doFilter.bind(this);
         this.addMessage = this.addMessage.bind(this);
@@ -450,9 +434,13 @@ class ChatController{
         this.editRemoveMsg = this.editRemoveMsg.bind(this);
         this.getMore = this.getMore.bind(this);
         this.login = this.login.bind(this);
+        this.logout = this.logout.bind(this);
+        this.toMainPage = this.toMainPage.bind(this);
 
         document.forms.login.addEventListener('submit', this.login);
         document.querySelector('#second-btn-log').addEventListener('click', this.login);
+        document.querySelector('.btn-logout').addEventListener('click', this.logout);
+        document.querySelector('#to-main-page').addEventListener('click', this.toMainPage);
         const msgsContainer = document.querySelector('#msgs-container');
         msgsContainer.addEventListener('click', this.editRemoveMsg);
         msgsContainer.addEventListener('scroll', this.getMore);
@@ -464,6 +452,42 @@ class ChatController{
         document.querySelector('.users').addEventListener('click', this.addSpecialMessage);
 
         document.forms.filters.addEventListener('submit', this.doFilter);
+    }
+
+    logout(){
+        document.querySelector('.login').style.display = 'flex';
+        document.querySelector('.main-page').style.display = 'none';
+        document.querySelector('.btn-logout').style.display = 'none';
+        this.top = 10;
+        document.querySelector('#msgs-container').style['scroll-behavior'] = 'auto';
+        user = '';
+        this.setCurrentUser(user);
+    }
+
+    static mainPageNoUser(){
+        document.querySelector('.login').style.display = 'none';
+        document.querySelector('.main-page').style.display = 'flex';
+        document.querySelector('#addition-btn').style.display = 'none';
+        document.querySelector('.send-message-container').style.display = 'none';
+        document.querySelector('.edit-to-mode').style.display = 'none';
+    }
+    static mainPageUser(){
+        document.querySelector('#addition-btn').style.display = 'flex';
+        document.querySelector('.send-message-container').style.display = 'flex';
+        document.querySelector('.btn-logout').textContent = 'Logout';
+        document.querySelector('.edit-to-mode').style.display = 'flex';
+    }
+
+    toMainPage(event){
+        if(event.target.id  === 'to-main-page' || event.target.parentElement.id === 'to-main-page'){
+            document.forms.login.reset();
+            ChatController.mainPageNoUser();
+            const log = document.querySelector('.btn-logout');
+            log.style.display = 'flex';
+            log.textContent = 'Login';
+            this.setCurrentUser(user);
+            this.showMessages(this.skip, this.top);
+        }
     }
 
     setCurrentUser (userMain) {
@@ -488,11 +512,14 @@ class ChatController{
     login(event){
         event.preventDefault();
         if(event.target.id !== 'login' && event.target.id !== 'second-btn-log') return;
-        const user = document.forms.login.name.value;
-        if(event.target.id === 'login' && this.mUsers.isUser(user)){
+        const us = document.forms.login.name.value;
+        if(event.target.id === 'login' && this.mUsers.isUser(us)){
+            document.forms.login.reset();
             document.querySelector('.login').style.display = 'none';
             document.querySelector('.main-page').style.display = 'flex';
-            this.setCurrentUser(user);
+            document.querySelector('.btn-logout').style.display = 'flex';
+            ChatController.mainPageUser();
+            this.setCurrentUser(us);
             this.showMessages(this.skip, this.top);
         } else if (document.querySelector('#second-btn-log').outerText === 'Sign Up'){
             ChatController.noIsUsers();
@@ -509,15 +536,15 @@ class ChatController{
 
     addSpecialMessage(event){
         if(event.currentTarget.id !== 'users') return;
-        document.querySelector('.to').textContent = `To: ${event.target.parentNode.children[1].textContent}`;
-        document.querySelector('.to').style.visibility = 'visible';
+        document.querySelector('#to').textContent = `To: ${event.target.parentNode.children[1].textContent}`;
+        document.querySelector('#to').style.visibility = 'visible';
         this.vUsers.visibleUsers();
     }
 
     addMessage(event) {
         if(event.target.id !== 'sender' && !(event.key === 'Enter' && event.shiftKey)) return;
         const textArea = document.getElementsByTagName('textarea')[0];
-        let to = document.querySelector('.to');
+        let to = document.querySelector('#to');
         let toText = to.textContent.replace('To: ', '');
         const editMode = document.querySelector('.edit-mode');
         if(editMode.style.display === 'block'){
@@ -529,6 +556,7 @@ class ChatController{
             cont.scrollTop = cont.scrollHeight;
         }
         to.style.visibility = 'hidden';
+        to.textContent = '';
         textArea.value = '';
     }
 
@@ -550,8 +578,8 @@ class ChatController{
             document.querySelector('.edit-mode').style.display = 'block';
             document.querySelector('.edit-mode').id = `edit-mode${partId}`;
             document.querySelector('textarea').value = this.mMsgs.get(idMsg).text;
-            document.querySelector('.to').style.visibility = 'visible';
-            document.querySelector('.to').textContent = `To: ${this.mMsgs.get(idMsg).to}`;
+            document.querySelector('#to').style.visibility = 'visible';
+            document.querySelector('#to').textContent = `To: ${this.mMsgs.get(idMsg).to}`;
         } else if(event.target.className.includes('message-delete')){
             this.removeMsg(event);
         }
@@ -585,15 +613,17 @@ class ChatController{
         const text = event.currentTarget.textMsg.value;
         const date = event.currentTarget.dateMsg.value;
         const filterConfig = ChatController.fillFilterConfig(author, text, date);
+        this.useFilter = !MessageList.isEmptyFieldsFC(filterConfig);
         document.forms.filters.reset();
-        this.vMsgs.display(this.mMsgs.getPage(this.skip, this.top, filterConfig));
+        const top = this.useFilter ? this.mMsgs.lenghtShowMsgs() : this.top;
+        this.showMessages(this.skip, top, filterConfig);
         document.querySelector('.filters').style.visibility = 'hidden';
 
     }
 
     getMore(){
         const cont = document.getElementById('msgs-container');
-        if(cont.scrollTop === 0){
+        if(cont.scrollTop === 0 && cont.scrollHeight > cont.clientHeight && !this.useFilter){
             if(this.mMsgs.lenghtShowMsgs() > this.top) {
                 this.top += 10;
                 cont.style['scroll-behavior'] = 'smooth';
