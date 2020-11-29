@@ -17,7 +17,7 @@
     <img class="flex-elem main-img-size" src="../Extra_tasks/1.1/Logo.png" alt="Logo">
     <p class="flex-elem alignment-right important-font-white" id="user-header"></p>
     <div class="logout important-font-white">
-        <a>Logout</a>
+        <a class="btn-logout"></a>
     </div>
 </header>
 <main>
@@ -122,7 +122,10 @@
                     </div>
 
                     <span class="main-font-black text" ></span>
-                    <div class="message-date add-font-black"></div>
+                    <div class="addition-info">
+                        <p class="to to-name"></p>
+                        <div class="message-date add-font-black"></div>
+                    </div>
                 </div>
             </article>
         </template>
@@ -131,7 +134,7 @@
         </div>
 
         <div class="edit-to-mode">
-            <p class="to"></p>
+            <p class="to" id="to"></p>
             <p class="edit-mode">Edit mode</p>
         </div>
         <div class="send-message-container">

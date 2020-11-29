@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+
+    <style>
+        @import "../../node_modules/material-design-icons/iconfont/material-icons.css";
+        *{
+            margin: 0;
+            padding: 0;
+        }
+        html{
+            height: 100%;
+        }
+        body{
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+        }
+        table{
+            border-collapse: collapse;
+        }
+        th{
+            background: #febb02;
+        }
+        td, th {
+            width: 5rem;
+            height: 5rem;
+            border: 0.1rem solid white;
+            text-align: center;
+        }
+        div{
+            font-size: 4rem!important;
+            color: white;
+        }
+        .line {
+            height: 0.1rem;
+            border-width: 0;
+            align-self: center;
+            width: calc(15rem + 0.1rem*2);
+            color: #febb02;
+            background-color: #febb02;
+            position: relative;
+        }
+        .row-three{
+            bottom: 2.5rem;
+        }
+        .row-two{
+            bottom: 7.5rem;
+        }
+        .row-one{
+            bottom: 12.5rem;
+        }
+        .line-vertical{
+            position: absolute;
+            width: 0.1rem;
+            height: calc(15rem + 0.1rem*2);
+            margin-bottom: 3rem;
+        }
+        .column-three{
+            right: calc(50% - 5rem);
+        }
+        .column-one{
+            left: calc(50% - 5rem);
+        }
+        .diagonal-line-left {
+            transform: rotate(50grad);
+            bottom: calc((15rem + 0.1rem*2)/2);
+            width: calc((15rem + 0.1rem*2)*1.41);
+        }
+        .diagonal-line-right {
+            transform: rotate(-50grad);
+            bottom: calc((15rem + 0.1rem*2)/2);
+            width: calc((15rem + 0.1rem*2)*1.41);
+        }
+        .animated {
+            transition-property: background-color;
+            transition-duration: 3s;
+        }
+        button{
+            border: 1px solid white;
+            border-radius: 0.3rem;
+            background: #03A6A6;
+            outline: none;
+            margin-top: 1rem;
+            height: 2rem;
+            padding: 0 0.5rem 0 0.5rem;
+            color: white;
+            visibility: hidden;
+        }
+    </style>
+    <link rel="stylesheet" href="../../node_modules/material-design-icons/iconfont/material-icons.css">
+</head>
+<body>
+<template id="zero">
+    <div class="material-icons">panorama_fish_eye</div>
+</template>
+<template id="cross">
+    <div class="material-icons">clear</div>
+</template>
+<table id="cross-zero" >
+    <tr id="1"><th id="1.1"><th id="1.2"><th id="1.3"></tr>
+    <tr id="2"><th id="2.1"><th id="2.2"><th id="2.3"></tr>
+    <tr id="3"><th id="3.1"><th id="3.2"><th id="3.3"></tr>
+</table>
+<hr class="line animated" id="line">
+<button onclick="startAgain()" id="btn">Start again</button>
+</body>
+<script src="index.js"></script>
+</html>
