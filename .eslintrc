@@ -30,7 +30,8 @@
     "prefer-rest-params": "warn",
     "no-undef": "warn",
     "prefer-destructuring": "warn",
-    "no-unused-vars": "warn"
+    "no-unused-vars": "warn",
+    "no-lonely-if": "warn"
 
   },
   "parserOptions": {

@@ -9,7 +9,7 @@ class HeaderView {
 
     display(user) {
         const UserHeader = document.getElementById(this.containerId);
-        UserHeader.innerText = user ? user.replace(' ', '\n') : 'No\nName';
+        UserHeader.innerText = sessionStorage.getItem('user') ? user.replace(' ', '\n') : 'No\nName';
     }
 }
 
@@ -19,13 +19,14 @@ class MessagesView {
     }
 
     static isMainUserMessage(msg) {
-        return (msg.author === user)
+        return (msg.author === sessionStorage.getItem('user'))
             ? 'main-user-message'
             : 'other-message';
     }
 
     static isPersonalMessage(msg) {
-        return (msg.to === user && user !== '')
+        const us = sessionStorage.getItem('user');
+        return (msg.to === us && us !== '')
             ? 'special-message'
             : '';
     }
@@ -51,7 +52,7 @@ class MessagesView {
         const el = msgTpl.content.cloneNode(true);
         el.querySelector('.message').id = `msg-${msg.id}`;
         el.querySelector('.message').classList.add(MessagesView.isMainUserMessage(msg));
-        if (msg.author === user) {
+        if (msg.author === sessionStorage.getItem('user')) {
             el.querySelector('.message-edit').id = `edit-${msg.id}`;
             el.querySelector('.message-delete').id = `delete-${msg.id}`;
             el.querySelector('.message-edit').textContent = 'create';
@@ -62,7 +63,7 @@ class MessagesView {
         el.querySelector('.short-name').textContent = msg.author.trim().charAt(0);
         el.querySelector('.user-name').textContent = msg.author;
         el.querySelector('.text').textContent = msg.text;
-        if(msg.to && msg.to !== user) el.querySelector('.to-name').textContent = `To: ${msg.to}`;
+        if(msg.to && msg.to !== sessionStorage.getItem('user')) el.querySelector('.to-name').textContent = `To: ${msg.to}`;
         el.querySelector('.message-date').textContent = MessagesView.formatDate(new Date(msg.createdAt));
         fr.appendChild(el);
         msgs.prepend(fr);
@@ -97,7 +98,7 @@ class UsersView {
         const users = document.getElementById(this.containerId);
         const fr = new DocumentFragment();
         list.forEach((usr) => {
-            if (usr.name && usr.name !== user) {
+            if (usr.name && usr.name !== sessionStorage.getItem('user')) {
                 const usrId = UsersView.generateId();
                 const el = userTpl.content.cloneNode(true);
                 el.querySelector('.short-name').textContent = usr.name.charAt(0);
@@ -166,12 +167,8 @@ class UsersView {
         return h;
     }
      _makeRequest(url, method, headers, body = ''){
-         console.log(url);
-        let r = fetch(`${this.address}${url}`, ChatApiService._getRequestOption(method, headers, body))
-            .catch(() => console.log('error'));
-
-        console.log(r);
-         return r;
+         return fetch(`${this.address}${url}`, ChatApiService._getRequestOption(method, headers, body))
+             .catch(() => console.log('error'));
      }
 
     registration(name, pass){
@@ -244,7 +241,7 @@ class ChatController{
             dateFrom: '',
             dateTo: ''
         };
-        this.setCurrentUser(user);
+        this.setCurrentUser(sessionStorage.getItem('user'));
 
         this.doFilter = this.doFilter.bind(this);
         this.addMessage = this.addMessage.bind(this);
@@ -256,6 +253,7 @@ class ChatController{
         this.logout = this.logout.bind(this);
         this.loginFromChat = this.loginFromChat.bind(this);
         this.toMainPage = this.toMainPage.bind(this);
+        this.showMainPage();
 
         document.forms.login.addEventListener('submit', this.login);
         document.querySelector('#second-btn-log').addEventListener('click', this.login);
@@ -295,15 +293,10 @@ class ChatController{
                 document.querySelector('.login').style.display = 'flex';
                 document.querySelector('.main-page').style.display = 'none';
                 document.querySelector('.btn-logout').style.display = 'none';
-                document.querySelector('.filters').style.visibility = 'hidden';
-                document.querySelector('.users').style.display = 'hidden';
-                document.querySelector('.edit-mode').style.display = 'none';
-                document.querySelector('#to').style.visibility = 'hidden';
-
                 this.top = 10;
                 document.querySelector('#msgs-container').style['scroll-behavior'] = 'auto';
-                user = '';
-                this.setCurrentUser(user);
+                sessionStorage.setItem('user', '');
+                this.setCurrentUser('');
                 sessionStorage.setItem('token', '');
             }
         })
@@ -320,28 +313,40 @@ class ChatController{
     static mainPageUser(){
         document.querySelector('#addition-btn').style.display = 'flex';
         document.querySelector('.send-message-container').style.display = 'flex';
-        document.querySelector('.btn-logout').textContent = 'Logout';
         document.querySelector('.edit-to-mode').style.display = 'flex';
     }
 
+    showMainPage(){
+        document.querySelector('.main-page').style.display = 'flex';
+        document.querySelector('.filters').style.visibility = 'hidden';
+        document.querySelector('.users').style.visibility = 'hidden';
+        document.querySelector('.edit-mode').style.display = 'none';
+        document.querySelector('#to').style.visibility = 'hidden';
+        const log = document.querySelector('.btn-logout');
+        log.style.display = 'flex';
+        const tok = sessionStorage.getItem('token');
+        log.textContent = tok ? 'Logout' : 'Login';
+        if(tok){
+            ChatController.mainPageUser();
+        } else{
+            ChatController.mainPageNoUser();
+        }
+        const us = sessionStorage.getItem('user') !== 'null' ? sessionStorage.getItem('user') : '';
+        this.setCurrentUser(us);
+        (async() => {
+            await this.showMessages();
+            ChatController.doScrollBottom();
+        })();
+    }
     toMainPage(event){
         if(event.target.id  === 'to-main-page' || event.target.parentElement.id === 'to-main-page'){
-            document.forms.login.reset();
-            ChatController.mainPageNoUser();
-            const log = document.querySelector('.btn-logout');
-            log.style.display = 'flex';
-            log.textContent = 'Login';
-            this.setCurrentUser(user);
-            (async() => {
-                await this.showMessages();
-                ChatController.doScrollBottom();
-            })();
+            this.showMainPage();
         }
     }
 
     setCurrentUser (userMain) {
         this.vHeader.display(userMain);
-        user = userMain;
+        sessionStorage.setItem('user', userMain);
     };
 
     static noIsUsers(){
@@ -349,7 +354,7 @@ class ChatController{
         document.querySelector('#second-btn-log').innerText = 'Login';
         document.querySelector('#rep-pass-block').style.visibility = 'visible';
     }
-    addNewUser(){
+    static toLogin(){
         document.querySelector('#first-btn-log').innerText = 'Login';
         document.querySelector('#second-btn-log').innerText = 'Sign Up';
         document.querySelector('#rep-pass-block').style.visibility = 'hidden';
@@ -377,11 +382,6 @@ class ChatController{
                     console.log(r);
                     document.forms.login.reset();
                     document.querySelector('.login').style.display = 'none';
-                    document.querySelector('.main-page').style.display = 'flex';
-                    document.querySelector('.btn-logout').style.display = 'flex';
-                    ChatController.mainPageUser();
-                    this.setCurrentUser(us);
-
                 } else {
                     ChatController.showAlertLogin('This user is not registered!');
                 }
@@ -389,11 +389,9 @@ class ChatController{
 
             }).then((json) => {
                 sessionStorage.setItem('token', json.token);
+                sessionStorage.setItem('user', us);
                 if(json.token) {
-                    (async () => {
-                        await this.showMessages();
-                        ChatController.doScrollBottom();
-                    })();
+                    this.showMainPage();
                 }
 
             })
@@ -402,15 +400,19 @@ class ChatController{
         } else if (document.querySelector('#second-btn-log').outerText === 'Sign Up'){
             ChatController.noIsUsers();
         } else if(document.querySelector('#second-btn-log').outerText === 'Login'){
-            if(event.target.id === 'second-btn-log') this.addNewUser();
+            if(event.target.id === 'second-btn-log') ChatController.toLogin();
             else {
-                this.api.registration(us, pass).then((r) => {
-                    if (r.ok) {
-                        this.addNewUser();
-                    } else {
-                      ChatController.showAlertLogin('This username is already taken! Please, try again.');
-                    }
-                });
+                if (!isSignUp) {
+                    ChatController.showAlertLogin('Check your password and repeat of password!')
+                } else {
+                    this.api.registration(us, pass).then((r) => {
+                        if (r.ok) {
+                            ChatController.toLogin();
+                        } else {
+                            ChatController.showAlertLogin('This username is already taken! Please, try again.');
+                        }
+                    });
+                }
             }
 
         }
