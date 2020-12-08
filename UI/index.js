@@ -277,7 +277,7 @@ class ChatController{
         event.target.textContent = event.target.textContent === 'visibility' ? 'visibility_off' : 'visibility';
         const inp = event.target.parentNode.children[1];
         inp.setAttribute('type', inp.getAttribute('type') === 'text' ? 'password' : 'text' );
-         event.stopPropagation();
+        event.stopPropagation();
     }
     loginFromChat(event){
         event.preventDefault();
@@ -293,7 +293,7 @@ class ChatController{
     static displayNone(){
         [...document.querySelector('main').children].forEach((node) => node.style.display = 'none');
     }
-    toPageError(r){
+    static toPageError(r){
         ChatController.displayNone();
         if(r.status !== 401){
             document.querySelector('#page-error').style.display = 'flex';
@@ -313,7 +313,7 @@ class ChatController{
                 this.setCurrentUser('');
                 sessionStorage.setItem('token', '');
             } else {
-                this.toPageError(r);
+                ChatController.toPageError(r);
             }
         })
 
@@ -443,7 +443,7 @@ class ChatController{
             this.filterConfig.dateFrom, this.filterConfig.dateTo, this.filterConfig.text)
             .then((r) => {
                 if(r.ok) return r.json();
-                this.toPageError(r);
+                ChatController.toPageError(r);
                 return 0;
             })
             .then((data) => {
