@@ -1,4 +1,3 @@
-let user = '';
 const address = 'https://jslabdb.datamola.com';
 
 
@@ -187,7 +186,6 @@ class UsersView {
     }
 
     logout(){
-    console.log('token', sessionStorage.getItem('token'));
         return this._makeRequest('/auth/logout', 'POST',
             ChatApiService._getHeader('Authorization', `Bearer ${sessionStorage.getItem('token')}`));
     }
@@ -220,7 +218,6 @@ class UsersView {
 
     }
     getMessages(skip, top, author = '', dF = '', dT = '', t = '' ){
-        console.log(sessionStorage.getItem('token'));
         return this._makeRequest(`/messages?skip=${skip}&top=${top}&author=${author}&dateFrom=${dF}&dateTo=${dT}&text=${t}`,
             'GET',
             ChatApiService._getHeader('Authorization', `Bearer ${sessionStorage.getItem('token')}`));
@@ -255,12 +252,12 @@ class ChatController{
         this.toMainPage = this.toMainPage.bind(this);
         this.showMainPage();
 
-        document.querySelectorAll('.eye').forEach((it) => it.addEventListener('click', this.showPass));
+        document.querySelectorAll('.eye').forEach((it) => it.addEventListener('click', ChatController.showPass));
         document.forms.login.addEventListener('submit', this.login);
         document.querySelector('#second-btn-log').addEventListener('click', this.login);
         document.querySelector('.btn-logout').addEventListener('click', this.loginFromChat);
         document.querySelector('.btn-logout').addEventListener('click', this.logout);
-        document.querySelector('#to-main-page').addEventListener('click', this.toMainPage);
+        document.querySelectorAll('.to-main-page').forEach((it) => it.addEventListener('click', this.toMainPage));
         const msgsContainer = document.querySelector('#msgs-container');
         msgsContainer.addEventListener('click', this.editRemoveMsg);
         msgsContainer.addEventListener('scroll', this.getMore);
@@ -275,13 +272,12 @@ class ChatController{
         setInterval(this.showMessages.bind(this), 300000);
         this.TimeoutRenewUsers.bind(this)();
     }
-    showPass(event){
+    static showPass(event){
         event.preventDefault();
         event.target.textContent = event.target.textContent === 'visibility' ? 'visibility_off' : 'visibility';
         const inp = event.target.parentNode.children[1];
         inp.setAttribute('type', inp.getAttribute('type') === 'text' ? 'password' : 'text' );
-        //console.log(event.target.parentNode.children[1].setAttribute('type', 'text'));
-        event.stopPropagation();
+         event.stopPropagation();
     }
     loginFromChat(event){
         event.preventDefault();
@@ -294,9 +290,19 @@ class ChatController{
         document.querySelector('#msgs-container').style['scroll-behavior'] = 'auto';
         event.stopImmediatePropagation()
     }
+    static displayNone(){
+        [...document.querySelector('main').children].forEach((node) => node.style.display = 'none');
+    }
+    toPageError(r){
+        ChatController.displayNone();
+        if(r.status !== 401){
+            document.querySelector('#page-error').style.display = 'flex';
+        } else {
+            document.querySelector('.login').style.display = 'flex';
+        }
+    }
     logout(){
         this.api.logout().then((r) => {
-            console.log(r);
             if(r.ok){
                 document.querySelector('.login').style.display = 'flex';
                 document.querySelector('.main-page').style.display = 'none';
@@ -306,6 +312,8 @@ class ChatController{
                 sessionStorage.setItem('user', '');
                 this.setCurrentUser('');
                 sessionStorage.setItem('token', '');
+            } else {
+                this.toPageError(r);
             }
         })
 
@@ -325,6 +333,7 @@ class ChatController{
     }
 
     showMainPage(){
+        document.querySelector('#page-error').style.display = 'none';
         document.querySelector('.main-page').style.display = 'flex';
         document.querySelector('.filters').style.visibility = 'hidden';
         document.querySelector('.users').style.visibility = 'hidden';
@@ -347,9 +356,7 @@ class ChatController{
         })();
     }
     toMainPage(event){
-        if(event.target.id  === 'to-main-page' || event.target.parentElement.id === 'to-main-page'){
-            this.showMainPage();
-        }
+        this.showMainPage();
     }
 
     setCurrentUser (userMain) {
@@ -387,7 +394,6 @@ class ChatController{
         if(event.target.id === 'login' && document.querySelector('#second-btn-log').outerText === 'Sign Up' && us && pass){
             this.api.login(us, pass).then((r) => {
                 if(r.ok){
-                    console.log(r);
                     document.forms.login.reset();
                     document.querySelector('.login').style.display = 'none';
                 } else {
@@ -435,10 +441,15 @@ class ChatController{
     showMessages() {
         return this.api.getMessages(this.skip, this.top, this.filterConfig.author,
             this.filterConfig.dateFrom, this.filterConfig.dateTo, this.filterConfig.text)
-            .then((r) => r.json())
+            .then((r) => {
+                if(r.ok) return r.json();
+                this.toPageError(r);
+                return 0;
+            })
             .then((data) => {
                 this.vMsgs.display(data);
-            });
+            })
+            .catch((e) => console.log(e.message));
     }
 
     addSpecialMessage(event){
@@ -463,7 +474,7 @@ class ChatController{
                 isPersonal: !!toText,
                 to: toText
             };
-            console.log(JSON.stringify(msg));
+
             this.api.addMessage(JSON.stringify(msg))
                 .then(() => { this.showMessages(); ChatController.doScrollBottom(); })
                 .catch((e) => console.log(e));
@@ -549,8 +560,6 @@ class ChatController{
                 document.querySelector('.filter-error').style.visibility = 'hidden';
             }
         })();
-
-
     }
 
     getMore(){

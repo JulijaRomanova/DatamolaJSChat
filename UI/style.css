@@ -164,6 +164,7 @@ header, footer {
     width: 50%;
     height: 46%;
     overflow-y: auto;
+    overflow-x: hidden;
     top: 2rem;
     background: white;
     border: 1px solid black;
@@ -456,8 +457,7 @@ input:hover, input:focus {
 
 .error-page{
     width: 100%;
-    display: flex;
-    justify-content: center;
+    flex-direction: column;
     display: none;
 }
 
@@ -467,6 +467,7 @@ input:hover, input:focus {
     flex-direction: column;
     border: 2px solid var(--orange-red-error);
     border-radius: 0.3rem;
+    margin-top: 10rem;
 }
 
 .error-message {
