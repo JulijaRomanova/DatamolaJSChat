@@ -255,6 +255,7 @@ class ChatController{
         this.toMainPage = this.toMainPage.bind(this);
         this.showMainPage();
 
+        document.querySelectorAll('.eye').forEach((it) => it.addEventListener('click', this.showPass));
         document.forms.login.addEventListener('submit', this.login);
         document.querySelector('#second-btn-log').addEventListener('click', this.login);
         document.querySelector('.btn-logout').addEventListener('click', this.loginFromChat);
@@ -274,7 +275,14 @@ class ChatController{
         setInterval(this.showMessages.bind(this), 300000);
         this.TimeoutRenewUsers.bind(this)();
     }
-
+    showPass(event){
+        event.preventDefault();
+        event.target.textContent = event.target.textContent === 'visibility' ? 'visibility_off' : 'visibility';
+        const inp = event.target.parentNode.children[1];
+        inp.setAttribute('type', inp.getAttribute('type') === 'text' ? 'password' : 'text' );
+        //console.log(event.target.parentNode.children[1].setAttribute('type', 'text'));
+        event.stopPropagation();
+    }
     loginFromChat(event){
         event.preventDefault();
         const tId = event.target.id;
@@ -534,8 +542,14 @@ class ChatController{
         (async() => {
             await this.showMessages();
             ChatController.doScrollBottom();
+            if(document.querySelector('#msgs-container').children.length === 0){
+                document.querySelector('.filter-error').style.visibility = 'visible';
+            } else {
+                document.querySelector('.filters').style.visibility = 'hidden';
+                document.querySelector('.filter-error').style.visibility = 'hidden';
+            }
         })();
-        document.querySelector('.filters').style.visibility = 'hidden';
+
 
     }
 

@@ -212,6 +212,7 @@ input:hover, input:focus {
 .filter-error {
     color: var(--orange-red-error);
     margin: 1rem 0;
+    visibility: hidden;
 }
 
 .confirm-btns {
