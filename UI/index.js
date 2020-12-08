@@ -1,290 +1,5 @@
-let user = '';
+const address = 'https://jslabdb.datamola.com';
 
-
-class Message {
-    constructor(text = '', to = null, isPersonal = null, author = null, createdAt = null, id = null) {
-        this._id = id || Message.generateMsgId();
-        this._text = text;
-        this._createdAt = createdAt || new Date();
-        this._author = author || user;
-        this.isPersonal = isPersonal ?? (!!to);
-        this._to = to || '';
-    }
-    static generateMsgId(){
-        return `msg-${Math.floor(Math.random() * Number.MAX_SAFE_INTEGER).toString(32)}`;
-    }
-
-    get id() {
-        return this._id;
-    }
-
-    set id(id) {
-        try {
-            if (this.id !== id) {
-                throw new Error('Immutable field');
-            }
-        } catch (e) {
-            console.log(e.message);
-        }
-    }
-
-    get createdAt() {
-        return this._createdAt;
-    }
-
-    set createdAt(createdAt) {
-        try {
-            if (this._createdAt !== createdAt) {
-                throw new Error('Immutable field');
-            }
-        } catch (e) {
-            console.log(e.message);
-        }
-    }
-
-    get author() {
-        return this._author;
-    }
-
-    set author(author) {
-        try {
-            if (this._author !== author) {
-                throw new Error('Immutable field');
-            }
-        } catch (e) {
-            console.log(e.message);
-        }
-    }
-
-    set to(to) {
-        if (to) {
-            this._to = to;
-            this.isPersonal = !!to;
-        }
-    }
-
-    get to() {
-        return this._to;
-    }
-
-    set text(text) {
-        if (text) {
-            this._text = text;
-        }
-    }
-
-    get text() {
-        return this._text;
-    }
-
-    editMessage(text, to) {
-        this.to = to;
-        this.text = text;
-    }
-}
-
-class MessageList {
-    constructor(messages) {
-        this._messages = [];
-        this.restore(messages);
-    }
-
-    addAll(msgs) {
-        const noValidMsgs = [];
-        let mess;
-        msgs.forEach((msg) => {
-            mess = new Message(msg._text, msg._to, msg.isPersonal,
-                msg._author, new Date(msg._createdAt), msg._id);
-            if (MessageList.validate(mess)) {
-                this._messages.push(mess)
-            } else {
-                noValidMsgs.push(mess);
-            }
-        });
-        this.save();
-        return noValidMsgs;
-    }
-
-    clear() {
-        this.messages = [];
-    }
-
-    get messages() {
-        return this._messages;
-    }
-
-    set messages(messages) {
-        if (messages.length === 0) {
-            this._messages = [];
-        } else {
-            messages.forEach((msg) => (MessageList.validate(msg)
-                ? this._messages.push(msg) : false));
-        }
-
-    }
-
-
-    get(id) {
-        return this._messages.find((message) => (message.id === id));
-    }
-
-    static validate(msg) {
-        return !!msg.text && (msg.text.length <= 200);
-    }
-
-    add(text, to) {
-        let addMsg = new Message(text, to);
-        if (MessageList.validate(addMsg)) {
-            this.messages.push(addMsg);
-            this.save();
-            return true;
-        }
-        return false;
-    }
-
-    _isUser(id, msgIndex) {
-        return (user && (msgIndex !== -1) && (user === this.messages[msgIndex].author));
-    }
-
-    edit(id, text, to) {
-        const msgIndex = this.messages.findIndex((message) => message.id === id);
-        if (!this._isUser(id, msgIndex)) return false;
-        const elem = new Message({ ...this.messages[msgIndex] });
-        elem.editMessage(text, to);
-
-        if (MessageList.validate(elem)) {
-            this.messages[msgIndex].editMessage(text, to);
-            this.save();
-            return true;
-        }
-        return false;
-    }
-
-    remove(id) {
-        const msgIndex = this.messages.findIndex((message) => message.id === id);
-        if (!this._isUser(id, msgIndex)) return false;
-        this.messages.splice(msgIndex, 1);
-        this.save();
-        return true;
-    }
-
-    static _dateComparatorDesc(m1, m2) {
-        return (m2.createdAt - m1.createdAt);
-    }
-
-    static _checkFilter(message, filterConfig, key) {
-        switch (key) {
-            case 'dateFrom':
-                return message.createdAt >= filterConfig[key];
-            case 'dateTo':
-                return message.createdAt <= filterConfig[key];
-            default:
-                return message[key].toLowerCase().includes(filterConfig[key].toLowerCase());
-        }
-    }
-
-    static _abilityToView(message) {
-        return (message.author === user || message.to === user || message.to === '');
-    }
-
-    static isEmptyFieldsFC(filterConfig){
-        return !filterConfig?.author && !filterConfig?.text
-            && !filterConfig?.dateTo && !filterConfig?.dateFrom;
-    }
-
-    getPage(skip = 0, top = 10, filterConfig = null) {
-        return Object
-            .assign([], this.messages)
-            .filter((message) => MessageList._abilityToView(message))
-            .filter((message) => (filterConfig && !MessageList.isEmptyFieldsFC(filterConfig)
-                ? Object.keys(filterConfig)
-                    .map((key) => MessageList._checkFilter(message, filterConfig, key))
-                    .reduce((result, key) => result && key)
-                : true))
-            .sort(MessageList._dateComparatorDesc)
-            .slice(skip, skip + top);
-    }
-
-    lenghtShowMsgs(){
-        return this.getPage(0, this.messages.length).length
-    }
-
-    save() {
-        const serializedMsgs = JSON.stringify(this.messages);
-        localStorage.setItem('Messages', serializedMsgs);
-    }
-
-
-    restore(mess) {
-        const items = localStorage.getItem('Messages');
-        try {
-            this.clear();
-            this.addAll(JSON.parse(items) || mess);
-        } catch (e) {
-            this.messages = [];
-        }
-    }
-}
-
-class UserList {
-    constructor(users, activeUsers) {
-        this._users = users;
-        this._activeUsers = activeUsers;
-        this.restore(users);
-    }
-
-    set users(users) {
-        this._users = users;
-    }
-
-    get users() {
-        return this._users;
-    }
-
-    set activeUsers(actUsers) {
-        this._activeUsers = actUsers;
-    }
-
-    get activeUsers() {
-        return this._activeUsers;
-    }
-
-    get noActiveUsers() {
-        let noActiveUsers = Object.assign([], this.users);
-        this.activeUsers.forEach((act) => {
-            noActiveUsers.splice(noActiveUsers.indexOf(act), 1)
-        });
-        return noActiveUsers;
-    }
-
-    isUser(userName){
-        return this.users.includes(userName);
-    }
-
-    addUser(userName){
-        this.users.push(userName);
-        this.save();
-    }
-
-    static generateId(){
-        return Math.floor(Math.random() * Number.MAX_SAFE_INTEGER).toString(32);
-    }
-
-    save() {
-        const serializedUsers = JSON.stringify(this.users);
-        localStorage.setItem('Users', serializedUsers);
-    }
-
-
-    restore(users) {
-        const items = localStorage.getItem('Users');
-        try {
-            this.users = (JSON.parse(items) || users);
-        } catch (e) {
-            this.users = [];
-        }
-    }
-}
 
 class HeaderView {
     constructor(containerId) {
@@ -293,7 +8,7 @@ class HeaderView {
 
     display(user) {
         const UserHeader = document.getElementById(this.containerId);
-        UserHeader.innerText = user ? user.replace(' ', '\n') : 'No\nName';
+        UserHeader.innerText = sessionStorage.getItem('user') ? user.replace(' ', '\n') : 'No\nName';
     }
 }
 
@@ -303,13 +18,14 @@ class MessagesView {
     }
 
     static isMainUserMessage(msg) {
-        return (msg.author === user)
+        return (msg.author === sessionStorage.getItem('user'))
             ? 'main-user-message'
             : 'other-message';
     }
 
     static isPersonalMessage(msg) {
-        return (msg.to === user && user !== '')
+        const us = sessionStorage.getItem('user');
+        return (msg.to === us && us !== '')
             ? 'special-message'
             : '';
     }
@@ -333,22 +49,21 @@ class MessagesView {
         const msgs = document.getElementById(this.containerId);
         const fr = new DocumentFragment();
         const el = msgTpl.content.cloneNode(true);
-        el.querySelector('.message').id = msg.id;
-        const msgId = msg.id.replace('msg-', '');
+        el.querySelector('.message').id = `msg-${msg.id}`;
         el.querySelector('.message').classList.add(MessagesView.isMainUserMessage(msg));
-        if (msg.author === user) {
-            el.querySelector('.message-edit').id = `edit-${msgId}`;
-            el.querySelector('.message-delete').id = `delete-${msgId}`;
+        if (msg.author === sessionStorage.getItem('user')) {
+            el.querySelector('.message-edit').id = `edit-${msg.id}`;
+            el.querySelector('.message-delete').id = `delete-${msg.id}`;
             el.querySelector('.message-edit').textContent = 'create';
             el.querySelector('.message-delete').textContent = 'close';
         }
         const isPersonalMsg = MessagesView.isPersonalMessage(msg);
         if (isPersonalMsg) el.querySelector('.message').classList.add(isPersonalMsg);
-        el.querySelector('.short-name').textContent = msg.author.charAt(0);
+        el.querySelector('.short-name').textContent = msg.author.trim().charAt(0);
         el.querySelector('.user-name').textContent = msg.author;
         el.querySelector('.text').textContent = msg.text;
-        if(msg.to && msg.to !== user) el.querySelector('.to-name').textContent = `To: ${msg.to}`;
-        el.querySelector('.message-date').textContent = MessagesView.formatDate(msg.createdAt);
+        if(msg.to && msg.to !== sessionStorage.getItem('user')) el.querySelector('.to-name').textContent = `To: ${msg.to}`;
+        el.querySelector('.message-date').textContent = MessagesView.formatDate(new Date(msg.createdAt));
         fr.appendChild(el);
         msgs.prepend(fr);
     }
@@ -373,21 +88,28 @@ class UsersView {
         this.containerId = containerId;
     }
 
-    _addUsers(list, isActive) {
+    static generateId(){
+        return Math.floor(Math.random() * Number.MAX_SAFE_INTEGER).toString(32);
+    }
+
+    _addUsers(list) {
         const userTpl = document.getElementById('user-template');
         const users = document.getElementById(this.containerId);
         const fr = new DocumentFragment();
         list.forEach((usr) => {
-            if (usr !== user) {
-                const usrId = UserList.generateId();
+            if (usr.name && usr.name !== sessionStorage.getItem('user')) {
+                const usrId = UsersView.generateId();
                 const el = userTpl.content.cloneNode(true);
-                el.querySelector('.short-name').textContent = usr.charAt(0);
-                el.querySelector('#user-name').textContent = usr;
-                if (!isActive) {
-                    el.querySelector('.create-new-mess').classList.add('no-visible')
-                } else { el.querySelector('.create-new-mess').id = `new-mess-${usrId}` }
+                el.querySelector('.short-name').textContent = usr.name.charAt(0);
+                el.querySelector('#user-name').textContent = usr.name;
                 el.querySelector('.user').id = `user-${usrId}`;
-                fr.appendChild(el);
+                if (!usr.isActive) {
+                    el.querySelector('.create-new-mess').classList.add('no-visible');
+                    fr.appendChild(el);
+                } else {
+                    el.querySelector('.create-new-mess').id = `new-mess-${usrId}`;
+                    fr.prepend(el)
+                }
             }
         });
         users.appendChild(fr);
@@ -405,27 +127,118 @@ class UsersView {
         users.style.visibility = (users.style.visibility === 'visible') ? 'hidden' : 'visible';
         return users.style.visibility;
     }
-    display(noActiveUsers, activeUsers) {
+
+    renewUsers(users){
         this._clearAllUsers();
-        if(this.visibleUsers() === 'visible') {
-            this._addUsers(activeUsers, true);
-            this._addUsers(noActiveUsers, false);
-        }
+        this._addUsers(users);
+    }
+
+    display() {
+        this.visibleUsers()
     }
 
 }
+ class ChatApiService{
+    constructor(address){
+        this.address = address;
+    }
+    static _getRequestOption( m, h, b){
+        let reqOption = {
+            method: m,
+            headers: h,
+            redirect: 'follow'
+        };
+        if(b){
+            reqOption.body = b;
+        }
+        return reqOption;
+    }
 
+    static _getFormDataLogin(name, pass){
+        let formData = new FormData();
+        formData.append('name', name);
+        formData.append('pass', pass);
+        return formData;
+    }
+    static _getHeader(name, value){
+        let h = new Headers();
+        h.append(name, value);
+        return h;
+    }
+     _makeRequest(url, method, headers, body = ''){
+         return fetch(`${this.address}${url}`, ChatApiService._getRequestOption(method, headers, body))
+             .catch(() => console.log('error'));
+     }
+
+    registration(name, pass){
+        return this._makeRequest('/auth/register', 'POST',
+            ChatApiService._getHeader('Registration', 'Bearer some.token'),
+            ChatApiService._getFormDataLogin(name, pass));
+    }
+
+    login(name, pass){
+
+        let l =  this._makeRequest('/auth/login', 'POST',
+            ChatApiService._getHeader('Authorization', `Bearer ${sessionStorage.getItem('token')}`),
+            ChatApiService._getFormDataLogin(name, pass));
+
+        return l;
+    }
+
+    logout(){
+        return this._makeRequest('/auth/logout', 'POST',
+            ChatApiService._getHeader('Authorization', `Bearer ${sessionStorage.getItem('token')}`));
+    }
+
+    editMessage(id, msgEditString){
+
+        let h = ChatApiService._getHeader('Authorization',
+            `Bearer ${sessionStorage.getItem('token')}`);
+        h.append('Content-Type', 'application/json');
+
+        return this._makeRequest(`/messages/${id}`, 'PUT',
+            h, msgEditString);
+    }
+
+    removeMessage(id){
+        return this._makeRequest(`/messages/${id}`, 'DELETE',
+            ChatApiService._getHeader('Authorization', `Bearer ${sessionStorage.getItem('token')}`));
+    }
+
+    addMessage(msgString){
+        let h = ChatApiService._getHeader('Authorization', `Bearer ${sessionStorage.getItem('token')}`);
+        h.append('Content-Type', 'application/json');
+
+        return this._makeRequest('/messages', 'POST',
+            h, msgString);
+    }
+    getUsers() {
+        return this._makeRequest('/users', 'GET',
+            ChatApiService._getHeader('Authorization', `Bearer ${sessionStorage.getItem('token')}`));
+
+    }
+    getMessages(skip, top, author = '', dF = '', dT = '', t = '' ){
+        return this._makeRequest(`/messages?skip=${skip}&top=${top}&author=${author}&dateFrom=${dF}&dateTo=${dT}&text=${t}`,
+            'GET',
+            ChatApiService._getHeader('Authorization', `Bearer ${sessionStorage.getItem('token')}`));
+
+    }
+ }
 class ChatController{
-    constructor(msgs, users, activeUsers){
+    constructor(){
         this.skip = 0;
         this.top = 10;
-        this.mMsgs = new MessageList(msgs);
+        this.api = new ChatApiService(address);
         this.vMsgs = new MessagesView('msgs-container');
-        this.mUsers = new UserList(users, activeUsers);
         this.vUsers = new UsersView('users');
         this.vHeader = new HeaderView('user-header');
-        this.useFilter = false;
-        this.setCurrentUser(user);
+        this.filterConfig = {
+            author: '',
+            text: '',
+            dateFrom: '',
+            dateTo: ''
+        };
+        this.setCurrentUser(sessionStorage.getItem('user'));
 
         this.doFilter = this.doFilter.bind(this);
         this.addMessage = this.addMessage.bind(this);
@@ -435,12 +248,16 @@ class ChatController{
         this.getMore = this.getMore.bind(this);
         this.login = this.login.bind(this);
         this.logout = this.logout.bind(this);
+        this.loginFromChat = this.loginFromChat.bind(this);
         this.toMainPage = this.toMainPage.bind(this);
+        this.showMainPage();
 
+        document.querySelectorAll('.eye').forEach((it) => it.addEventListener('click', ChatController.showPass));
         document.forms.login.addEventListener('submit', this.login);
         document.querySelector('#second-btn-log').addEventListener('click', this.login);
+        document.querySelector('.btn-logout').addEventListener('click', this.loginFromChat);
         document.querySelector('.btn-logout').addEventListener('click', this.logout);
-        document.querySelector('#to-main-page').addEventListener('click', this.toMainPage);
+        document.querySelectorAll('.to-main-page').forEach((it) => it.addEventListener('click', this.toMainPage));
         const msgsContainer = document.querySelector('#msgs-container');
         msgsContainer.addEventListener('click', this.editRemoveMsg);
         msgsContainer.addEventListener('scroll', this.getMore);
@@ -452,16 +269,54 @@ class ChatController{
         document.querySelector('.users').addEventListener('click', this.addSpecialMessage);
 
         document.forms.filters.addEventListener('submit', this.doFilter);
+        setInterval(this.showMessages.bind(this), 300000);
+        this.TimeoutRenewUsers.bind(this)();
     }
-
-    logout(){
+    static showPass(event){
+        event.preventDefault();
+        event.target.textContent = event.target.textContent === 'visibility' ? 'visibility_off' : 'visibility';
+        const inp = event.target.parentNode.children[1];
+        inp.setAttribute('type', inp.getAttribute('type') === 'text' ? 'password' : 'text' );
+        event.stopPropagation();
+    }
+    loginFromChat(event){
+        event.preventDefault();
+        const tId = event.target.id;
+        if(tId !== 'login-logout' || document.querySelector(`#${tId}`).textContent !== 'Login') return;
         document.querySelector('.login').style.display = 'flex';
         document.querySelector('.main-page').style.display = 'none';
         document.querySelector('.btn-logout').style.display = 'none';
         this.top = 10;
         document.querySelector('#msgs-container').style['scroll-behavior'] = 'auto';
-        user = '';
-        this.setCurrentUser(user);
+        event.stopImmediatePropagation()
+    }
+    static displayNone(){
+        [...document.querySelector('main').children].forEach((node) => node.style.display = 'none');
+    }
+    static toPageError(r){
+        ChatController.displayNone();
+        if(r.status !== 401){
+            document.querySelector('#page-error').style.display = 'flex';
+        } else {
+            document.querySelector('.login').style.display = 'flex';
+        }
+    }
+    logout(){
+        this.api.logout().then((r) => {
+            if(r.ok){
+                document.querySelector('.login').style.display = 'flex';
+                document.querySelector('.main-page').style.display = 'none';
+                document.querySelector('.btn-logout').style.display = 'none';
+                this.top = 10;
+                document.querySelector('#msgs-container').style['scroll-behavior'] = 'auto';
+                sessionStorage.setItem('user', '');
+                this.setCurrentUser('');
+                sessionStorage.setItem('token', '');
+            } else {
+                ChatController.toPageError(r);
+            }
+        })
+
     }
 
     static mainPageNoUser(){
@@ -474,26 +329,39 @@ class ChatController{
     static mainPageUser(){
         document.querySelector('#addition-btn').style.display = 'flex';
         document.querySelector('.send-message-container').style.display = 'flex';
-        document.querySelector('.btn-logout').textContent = 'Logout';
         document.querySelector('.edit-to-mode').style.display = 'flex';
     }
 
-    toMainPage(event){
-        if(event.target.id  === 'to-main-page' || event.target.parentElement.id === 'to-main-page'){
-            document.forms.login.reset();
+    showMainPage(){
+        document.querySelector('#page-error').style.display = 'none';
+        document.querySelector('.main-page').style.display = 'flex';
+        document.querySelector('.filters').style.visibility = 'hidden';
+        document.querySelector('.users').style.visibility = 'hidden';
+        document.querySelector('.edit-mode').style.display = 'none';
+        document.querySelector('#to').style.visibility = 'hidden';
+        const log = document.querySelector('.btn-logout');
+        log.style.display = 'flex';
+        const tok = sessionStorage.getItem('token');
+        log.textContent = tok ? 'Logout' : 'Login';
+        if(tok){
+            ChatController.mainPageUser();
+        } else{
             ChatController.mainPageNoUser();
-            const log = document.querySelector('.btn-logout');
-            log.style.display = 'flex';
-            log.textContent = 'Login';
-            this.setCurrentUser(user);
-            this.showMessages(this.skip, this.top);
         }
+        const us = sessionStorage.getItem('user') !== 'null' ? sessionStorage.getItem('user') : '';
+        this.setCurrentUser(us);
+        (async() => {
+            await this.showMessages();
+            ChatController.doScrollBottom();
+        })();
+    }
+    toMainPage(event){
+        this.showMainPage();
     }
 
     setCurrentUser (userMain) {
-        this.mUsers.user = userMain;
         this.vHeader.display(userMain);
-        user = userMain;
+        sessionStorage.setItem('user', userMain);
     };
 
     static noIsUsers(){
@@ -501,37 +369,87 @@ class ChatController{
         document.querySelector('#second-btn-log').innerText = 'Login';
         document.querySelector('#rep-pass-block').style.visibility = 'visible';
     }
-    addNewUser(){
-        const userName = document.forms.login.name.value;
-        if(userName) this.mUsers.addUser(userName);
+    static toLogin(){
         document.querySelector('#first-btn-log').innerText = 'Login';
         document.querySelector('#second-btn-log').innerText = 'Sign Up';
         document.querySelector('#rep-pass-block').style.visibility = 'hidden';
+    }
+
+    static showAlertLogin(text){
+        let al = document.querySelector('#alert');
+        al.textContent = text;
+        al.style.visibility = 'visible';
+        setTimeout( () => {
+            al.style.visibility = 'hidden';
+        }, 5000 );
     }
 
     login(event){
         event.preventDefault();
         if(event.target.id !== 'login' && event.target.id !== 'second-btn-log') return;
         const us = document.forms.login.name.value;
-        if(event.target.id === 'login' && this.mUsers.isUser(us)){
-            document.forms.login.reset();
-            document.querySelector('.login').style.display = 'none';
-            document.querySelector('.main-page').style.display = 'flex';
-            document.querySelector('.btn-logout').style.display = 'flex';
-            ChatController.mainPageUser();
-            this.setCurrentUser(us);
-            this.showMessages(this.skip, this.top);
+        const pass = document.forms.login.pass.value;
+        const repPass = document.forms.login['rep-pass'].value;
+        const isSignUp = us && pass && (pass === repPass);
+        if(event.target.id === 'login' && document.querySelector('#second-btn-log').outerText === 'Sign Up' && us && pass){
+            this.api.login(us, pass).then((r) => {
+                if(r.ok){
+                    document.forms.login.reset();
+                    document.querySelector('.login').style.display = 'none';
+                } else {
+                    ChatController.showAlertLogin('This user is not registered!');
+                }
+                return r.json();
+
+            }).then((json) => {
+                sessionStorage.setItem('token', json.token);
+                sessionStorage.setItem('user', us);
+                if(json.token) {
+                    this.showMainPage();
+                }
+
+            })
+                .catch((e) => console.log(e.message));
+
         } else if (document.querySelector('#second-btn-log').outerText === 'Sign Up'){
             ChatController.noIsUsers();
         } else if(document.querySelector('#second-btn-log').outerText === 'Login'){
-            this.addNewUser();
+            if(event.target.id === 'second-btn-log') ChatController.toLogin();
+            else {
+                if (!isSignUp) {
+                    ChatController.showAlertLogin('Check your password and repeat of password!')
+                } else {
+                    this.api.registration(us, pass).then((r) => {
+                        if (r.ok) {
+                            ChatController.toLogin();
+                        } else {
+                            ChatController.showAlertLogin('This username is already taken! Please, try again.');
+                        }
+                    });
+                }
+            }
+
         }
 
     }
-    showMessages(skip = 0, top = 10, filterConfig) {
-        this.vMsgs.display(this.mMsgs.getPage(skip, top, filterConfig));
+
+    static doScrollBottom(){
         const cont = document.getElementById('msgs-container');
         cont.scrollTop = cont.scrollHeight;
+    }
+
+    showMessages() {
+        return this.api.getMessages(this.skip, this.top, this.filterConfig.author,
+            this.filterConfig.dateFrom, this.filterConfig.dateTo, this.filterConfig.text)
+            .then((r) => {
+                if(r.ok) return r.json();
+                ChatController.toPageError(r);
+                return 0;
+            })
+            .then((data) => {
+                this.vMsgs.display(data);
+            })
+            .catch((e) => console.log(e.message));
     }
 
     addSpecialMessage(event){
@@ -548,12 +466,18 @@ class ChatController{
         let toText = to.textContent.replace('To: ', '');
         const editMode = document.querySelector('.edit-mode');
         if(editMode.style.display === 'block'){
-            this.editMsg(editMode.id.replace('edit-mode', 'msg'), textArea.value, toText);
+            this.editMsg(editMode.id.replace('edit-mode-', ''), textArea.value, toText);
             editMode.style.display = 'none';
-        } else if (textArea.value && this.mMsgs.add(textArea.value, toText)) {
-            this.vMsgs.display(this.mMsgs.getPage(this.skip, this.top));
-            const cont = document.getElementById('msgs-container');
-            cont.scrollTop = cont.scrollHeight;
+        } else if (textArea.value) {
+            let msg = {
+                text: textArea.value,
+                isPersonal: !!toText,
+                to: toText
+            };
+
+            this.api.addMessage(JSON.stringify(msg))
+                .then(() => { this.showMessages(); ChatController.doScrollBottom(); })
+                .catch((e) => console.log(e));
         }
         to.style.visibility = 'hidden';
         to.textContent = '';
@@ -561,127 +485,94 @@ class ChatController{
     }
 
     removeMsg(event){
-        if (this.mMsgs.remove(event.target.id.replace('delete','msg'))) {
-            this.vMsgs.display(this.mMsgs.getPage(this.skip, this.top));
-        }
+        this.api.removeMessage(event.target.id.replace('delete-',''))
+            .then(() => this.showMessages())
+            .catch((e) => console.log(e.message));
     }
-    editMsg(id, text, to){
-        if (this.mMsgs.edit(id, text, to)) {
-            this.vMsgs.display(this.mMsgs.getPage(this.skip, this.top));
-        }
+    editMsg(id, textMsg, toMsg){
+        let editMsg = {
+            text: textMsg,
+            isPersonal: !!toMsg
+        };
+        if(editMsg.isPersonal) editMsg.to = toMsg;
+        this.api.editMessage(id, JSON.stringify(editMsg))
+            .then(() => this.showMessages())
+            .catch((e) => console.log(e.message));
     }
 
     editRemoveMsg(event) {
         if(event.target.className.includes('message-edit')){
             const partId = event.target.id.replace('edit','');
             const idMsg = `msg${partId}`;
+            const msg = document.querySelector(`#${idMsg}`);
             document.querySelector('.edit-mode').style.display = 'block';
             document.querySelector('.edit-mode').id = `edit-mode${partId}`;
-            document.querySelector('textarea').value = this.mMsgs.get(idMsg).text;
+            document.querySelector('textarea').value = msg.querySelector('.text').textContent;
             document.querySelector('#to').style.visibility = 'visible';
-            document.querySelector('#to').textContent = `To: ${this.mMsgs.get(idMsg).to}`;
+            document.querySelector('#to').textContent = `${msg.querySelector('.to').textContent}`;
         } else if(event.target.className.includes('message-delete')){
             this.removeMsg(event);
         }
     }
-
+    TimeoutRenewUsers() {
+        this.api.getUsers()
+            .then((r) => r.json())
+            .then((data) => this.vUsers.renewUsers(data))
+            .catch('Err');
+        setTimeout(this.TimeoutRenewUsers.bind(this), 600000);
+    }
 
     usersVsFilters(event){
         if(event.target.id  === 'btn-users' || event.target.parentElement.id === 'btn-users') {
-            this.vUsers.display(this.mUsers.noActiveUsers, this.mUsers.activeUsers);
+            this.vUsers.display();
         } else if (event.target.id  === 'btn-filters' || event.target.parentElement.id === 'btn-filters'){
             const filters = document.querySelector('.filters');
             filters.style.visibility = (filters.style.visibility === 'visible') ? 'hidden' : 'visible';
         }
     }
 
-    static fillFilterConfig(author, text, date){
-        const filterConfig = {};
-        if(author) filterConfig.author = author;
-        if(text) filterConfig.text = text;
+    fillFilterConfig(author, text, date){
+        this.filterConfig.author = author;
+        this.filterConfig.text = text;
         if(date) {
             const choice = new Date(date);
-            filterConfig.dateFrom = new Date(choice.setHours(0,0,0,0));
-            filterConfig.dateTo = new Date(choice.getFullYear(),
-                choice.getMonth(), choice.getDate() + 1);
+            this.filterConfig.dateFrom = `${choice.getFullYear()}${choice.getMonth() + 1}${choice.getDate()}`;
+            this.filterConfig.dateTo = `${choice.getFullYear()}${choice.getMonth() + 1}${choice.getDate()}`;
+        } else{
+            this.filterConfig.dateFrom = '';
+            this.filterConfig.dateTo = '';
         }
-        return filterConfig;
     }
     doFilter(event){
         event.preventDefault();
         const author = event.currentTarget.userName.value;
         const text = event.currentTarget.textMsg.value;
         const date = event.currentTarget.dateMsg.value;
-        const filterConfig = ChatController.fillFilterConfig(author, text, date);
-        this.useFilter = !MessageList.isEmptyFieldsFC(filterConfig);
+        this.fillFilterConfig(author, text, date);
         document.forms.filters.reset();
-        const top = this.useFilter ? this.mMsgs.lenghtShowMsgs() : this.top;
-        this.showMessages(this.skip, top, filterConfig);
-        document.querySelector('.filters').style.visibility = 'hidden';
-
+        (async() => {
+            await this.showMessages();
+            ChatController.doScrollBottom();
+            if(document.querySelector('#msgs-container').children.length === 0){
+                document.querySelector('.filter-error').style.visibility = 'visible';
+            } else {
+                document.querySelector('.filters').style.visibility = 'hidden';
+                document.querySelector('.filter-error').style.visibility = 'hidden';
+            }
+        })();
     }
 
     getMore(){
         const cont = document.getElementById('msgs-container');
-        if(cont.scrollTop === 0 && cont.scrollHeight > cont.clientHeight && !this.useFilter){
-            if(this.mMsgs.lenghtShowMsgs() > this.top) {
-                this.top += 10;
-                cont.style['scroll-behavior'] = 'smooth';
-                this.vMsgs.display(this.mMsgs.getPage(this.skip, this.top));
-                cont.scrollTop = cont.offsetHeight;
-            }
+        if(cont.scrollTop === 0 && cont.scrollHeight > cont.clientHeight){
+            this.top += 10;
+            cont.style['scroll-behavior'] = 'smooth';
+            this.showMessages();
+            cont.scrollTop = cont.offsetHeight;
         }
     }
 
 }
 
-const mess = [
-    new Message('It\'s very bad...', 'Grigorchik Ann', true,
-        'Beriozko Maria', new Date('2020-10-12T23:08:00')),
-    new Message('Hello!', 'Beriozko Maria', true,
-        'Mironov Andrei', new Date('2020-10-12T23:00:00')),
-    new Message('Hello. How are you doing ?', '', false,
-        'Beriozko Maria', new Date('2020-10-12T23:05:00')),
-    new Message('Hello! I\'m fine! I do my homework.', 'Beriozko Maria', true,
-        'Holubev Sergei', new Date('2020-10-12T23:06:00')),
-    new Message('I\'m feel bad and I wont sleep....', 'Beriozko Maria', true,
-        'Grigorchik Ann', new Date('2020-10-12T23:07:00')),
-    new Message('I think everything will be fine soon. We\'ll take a walk tomorrow.',
-        'Grigorchik Ann', true,
-        'Borisevich Daria', new Date('2020-10-12T23:10:00')),
-    new Message('I would like to go to the cinema', '', false,
-        'Gaponenko Arina', new Date('2020-10-12T23:09:00')),
-    new Message('I think we\'ll go to cinema tomorrow. Kate, are you going with us?',
-        '', false, 'Grigorchik Ann', new Date('2020-10-12T23:12:00')),
-    new Message('Sure. Sergey and I will there!', 'Ivanova Katya', true,
-        'Grigorchik Ann', new Date('2020-10-12T23:14:00')),
-    new Message('Can we go to the theater ?', '', false,
-        'Alhimenok Valeria', new Date('2020-10-12T23:15:00')),
-    new Message('I was there just recently...', '', false,
-        'Beriozko Maria', new Date('2020-10-12T23:16:00')),
-    new Message('I like movies more than theater', '', false,
-        'Holubev Sergei', new Date('2020-10-12T23:16:50')),
-    new Message('Write + if you go to the cinema tomorrow at 19:00', '',
-        false, 'Beriozko Maria', new Date('2020-10-12T23:17:00')),
-    new Message('+', '', false,
-        'Grigorchik Ann', new Date('2020-10-12T23:18:00')),
-    new Message('+++', '', false,
-        'Holubev Sergei', new Date('2020-10-12T23:17:30')),
-    new Message('I\'m fine!\n+', '', false,
-        'Gaponenko Arina', new Date('2020-10-12T23:19:00')),
-    new Message('I\'m going.\n + ', '', false,
-        'Mironov Andrei', new Date('2020-10-12T23:18:50')),
-    new Message('+ :)', '', false,
-        'Borisevich Daria', new Date('2020-10-12T23:20:00')),
-    new Message('+', '', false,
-        'Gaponenko Arina', new Date('2020-10-12T23:21:00')),
-    new Message('Cool. +', '', false,
-        'Ivanova Katya', new Date('2020-10-12T23:22:00')),
-    new Message('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'),
-];
 
-const users = ['Gaponenko Arina', 'Grigorchik Ann', 'Alhimenok Valeria',
-    'Beriozko Maria', 'Holubev Sergei', 'Mironov Andrei', 'Borisevich Daria', 'Ivanova Katya'];
-const activeUsers = ['Beriozko Maria', 'Holubev Sergei', 'Mironov Andrei', 'Borisevich Daria'];
-
-const Controller = new ChatController(mess, users, activeUsers);
+const Controller = new ChatController();
