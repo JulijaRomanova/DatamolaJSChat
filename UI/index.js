@@ -167,7 +167,8 @@ class UsersView {
     }
      _makeRequest(url, method, headers, body = ''){
          console.log(url);
-        let r = fetch(`${this.address}${url}`, ChatApiService._getRequestOption(method, headers, body));
+        let r = fetch(`${this.address}${url}`, ChatApiService._getRequestOption(method, headers, body))
+            .catch(() => console.log('error'));
 
         console.log(r);
          return r;
@@ -221,9 +222,10 @@ class UsersView {
             ChatApiService._getHeader('Authorization', `Bearer ${sessionStorage.getItem('token')}`));
 
     }
-    getMessages(skip, top){
+    getMessages(skip, top, author = '', dF = '', dT = '', t = '' ){
         console.log(sessionStorage.getItem('token'));
-        return this._makeRequest(`/messages?skip=${skip}&top=${top}`, 'GET',
+        return this._makeRequest(`/messages?skip=${skip}&top=${top}&author=${author}&dateFrom=${dF}&dateTo=${dT}&text=${t}`,
+            'GET',
             ChatApiService._getHeader('Authorization', `Bearer ${sessionStorage.getItem('token')}`));
 
     }
@@ -236,7 +238,12 @@ class ChatController{
         this.vMsgs = new MessagesView('msgs-container');
         this.vUsers = new UsersView('users');
         this.vHeader = new HeaderView('user-header');
-        this.useFilter = false;
+        this.filterConfig = {
+            author: '',
+            text: '',
+            dateFrom: '',
+            dateTo: ''
+        };
         this.setCurrentUser(user);
 
         this.doFilter = this.doFilter.bind(this);
@@ -273,7 +280,7 @@ class ChatController{
     loginFromChat(event){
         event.preventDefault();
         const tId = event.target.id;
-        if(tId !== 'login-logout' && document.querySelector(`#${tId}`).textContent !== 'Login') return;
+        if(tId !== 'login-logout' || document.querySelector(`#${tId}`).textContent !== 'Login') return;
         document.querySelector('.login').style.display = 'flex';
         document.querySelector('.main-page').style.display = 'none';
         document.querySelector('.btn-logout').style.display = 'none';
@@ -282,13 +289,17 @@ class ChatController{
         event.stopImmediatePropagation()
     }
     logout(){
-        console.log('2');
         this.api.logout().then((r) => {
             console.log(r);
             if(r.ok){
                 document.querySelector('.login').style.display = 'flex';
                 document.querySelector('.main-page').style.display = 'none';
                 document.querySelector('.btn-logout').style.display = 'none';
+                document.querySelector('.filters').style.visibility = 'hidden';
+                document.querySelector('.users').style.display = 'hidden';
+                document.querySelector('.edit-mode').style.display = 'none';
+                document.querySelector('#to').style.visibility = 'hidden';
+
                 this.top = 10;
                 document.querySelector('#msgs-container').style['scroll-behavior'] = 'auto';
                 user = '';
@@ -321,8 +332,10 @@ class ChatController{
             log.style.display = 'flex';
             log.textContent = 'Login';
             this.setCurrentUser(user);
-            this.showMessages();
-            ChatController.doScrollBottom();
+            (async() => {
+                await this.showMessages();
+                ChatController.doScrollBottom();
+            })();
         }
     }
 
@@ -342,6 +355,15 @@ class ChatController{
         document.querySelector('#rep-pass-block').style.visibility = 'hidden';
     }
 
+    static showAlertLogin(text){
+        let al = document.querySelector('#alert');
+        al.textContent = text;
+        al.style.visibility = 'visible';
+        setTimeout( () => {
+            al.style.visibility = 'hidden';
+        }, 5000 );
+    }
+
     login(event){
         event.preventDefault();
         if(event.target.id !== 'login' && event.target.id !== 'second-btn-log') return;
@@ -349,8 +371,6 @@ class ChatController{
         const pass = document.forms.login.pass.value;
         const repPass = document.forms.login['rep-pass'].value;
         const isSignUp = us && pass && (pass === repPass);
-        this.api.login(us, pass).then((response) => response.json())
-            .then((result) => console.log('token1', result.token));
         if(event.target.id === 'login' && document.querySelector('#second-btn-log').outerText === 'Sign Up' && us && pass){
             this.api.login(us, pass).then((r) => {
                 if(r.ok){
@@ -361,25 +381,34 @@ class ChatController{
                     document.querySelector('.btn-logout').style.display = 'flex';
                     ChatController.mainPageUser();
                     this.setCurrentUser(us);
+
+                } else {
+                    ChatController.showAlertLogin('This user is not registered!');
                 }
                 return r.json();
+
             }).then((json) => {
                 sessionStorage.setItem('token', json.token);
-                (async() => {
-                    await this.showMessages();
-                    ChatController.doScrollBottom();
-                })();
+                if(json.token) {
+                    (async () => {
+                        await this.showMessages();
+                        ChatController.doScrollBottom();
+                    })();
+                }
+
             })
-                .catch((e) => console.log('error', e.message));
+                .catch((e) => console.log(e.message));
 
         } else if (document.querySelector('#second-btn-log').outerText === 'Sign Up'){
             ChatController.noIsUsers();
         } else if(document.querySelector('#second-btn-log').outerText === 'Login'){
             if(event.target.id === 'second-btn-log') this.addNewUser();
             else {
-                this.api.registration(us, pass).then(r => {
+                this.api.registration(us, pass).then((r) => {
                     if (r.ok) {
                         this.addNewUser();
+                    } else {
+                      ChatController.showAlertLogin('This username is already taken! Please, try again.');
                     }
                 });
             }
@@ -394,7 +423,8 @@ class ChatController{
     }
 
     showMessages() {
-        return this.api.getMessages(this.skip, this.top)
+        return this.api.getMessages(this.skip, this.top, this.filterConfig.author,
+            this.filterConfig.dateFrom, this.filterConfig.dateTo, this.filterConfig.text)
             .then((r) => r.json())
             .then((data) => {
                 this.vMsgs.display(data);
@@ -480,29 +510,27 @@ class ChatController{
         }
     }
 
-    static fillFilterConfig(author, text, date){
-        const filterConfig = {};
-        if(author) filterConfig.author = author;
-        if(text) filterConfig.text = text;
+    fillFilterConfig(author, text, date){
+        this.filterConfig.author = author;
+        this.filterConfig.text = text;
         if(date) {
             const choice = new Date(date);
-            filterConfig.dateFrom = new Date(choice.setHours(0,0,0,0));
-            filterConfig.dateTo = new Date(choice.getFullYear(),
-                choice.getMonth(), choice.getDate() + 1);
+            this.filterConfig.dateFrom = `${choice.getFullYear()}${choice.getMonth() + 1}${choice.getDate()}`;
+            this.filterConfig.dateTo = `${choice.getFullYear()}${choice.getMonth() + 1}${choice.getDate()}`;
+        } else{
+            this.filterConfig.dateFrom = '';
+            this.filterConfig.dateTo = '';
         }
-        return filterConfig;
     }
     doFilter(event){
         event.preventDefault();
         const author = event.currentTarget.userName.value;
         const text = event.currentTarget.textMsg.value;
         const date = event.currentTarget.dateMsg.value;
-        const filterConfig = ChatController.fillFilterConfig(author, text, date);
-        this.useFilter = !MessageList.isEmptyFieldsFC(filterConfig);
+        this.fillFilterConfig(author, text, date);
         document.forms.filters.reset();
-        const top = this.useFilter ? this.mMsgs.lenghtShowMsgs() : this.top;
         (async() => {
-            await this.showMessages(this.skip, top, filterConfig);
+            await this.showMessages();
             ChatController.doScrollBottom();
         })();
         document.querySelector('.filters').style.visibility = 'hidden';
@@ -511,7 +539,7 @@ class ChatController{
 
     getMore(){
         const cont = document.getElementById('msgs-container');
-        if(cont.scrollTop === 0 && cont.scrollHeight > cont.clientHeight && !this.useFilter){
+        if(cont.scrollTop === 0 && cont.scrollHeight > cont.clientHeight){
             this.top += 10;
             cont.style['scroll-behavior'] = 'smooth';
             this.showMessages();
